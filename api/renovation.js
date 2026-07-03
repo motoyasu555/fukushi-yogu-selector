@@ -57,4 +57,3 @@ export default async function handler(req, res) {
     return res.status(500).json({ ok: false, error: error.message || "住宅改修理由書の作成に失敗しました" });
   }
 }
-
