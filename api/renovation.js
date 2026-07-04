@@ -4,42 +4,71 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") return res.status(204).end();
-  if (req.method !== "POST") return res.status(200).json({ ok: true, message: "POSTで住宅改修理由書の相談内容を送信してください" });
+  if (req.method !== "POST") {
+    return res.status(200).json({
+      ok: true,
+      message: "POSTで住宅改修理由書の相談内容を送信してください"
+    });
+  }
 
   try {
     const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) return res.status(500).json({ ok: false, error: "OPENAI_API_KEY is not set" });
+    if (!apiKey) {
+      return res.status(500).json({ ok: false, error: "OPENAI_API_KEY is not set" });
+    }
 
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
     const input = String(body.input || "").trim();
-    if (!input) return res.status(400).json({ ok: false, error: "住宅改修の相談内容を入力してください" });
+    if (!input) {
+      return res.status(400).json({ ok: false, error: "住宅改修の相談内容を入力してください" });
+    }
 
     const prompt = [
-      "あなたは日本の介護保険住宅改修理由書を作成支援するベテランの福祉用具専門相談員・介護支援専門員です。",
-      "添付原本の住宅改修理由書に転記しやすいよう、相談内容を欄ごとに分類して整理してください。",
-      "個人名、住所、被保険者番号、介護度などの個人情報は作成しないでください。空欄で後から手入力する前提です。",
-      "医療的断定や介護保険の可否の断定は避け、最終判断は現地確認と担当者確認で行う前提で書いてください。",
-      "住宅改修工事の内容は、手すり取付、段差解消、滑り防止、引き戸等への扉交換、洋式便器等への便器取替、付帯工事の範囲で整理してください。",
-      "相談内容だけで判断できない場合は断定せず、現地確認で確認すべき点として handoff_note に書いてください。",
-      "出力は必ずJSONのみ。Markdownや説明文は付けないでください。",
+      "あなたは日本の福祉用具専門相談員として15年以上の実務経験を持つベテランです。",
+      "介護保険制度・福祉用具貸与の対象種目・利用者の身体状況とADL（立ち上がり、移乗、歩行、排泄動作等）を踏まえて、一次アセスメントを行ってください。",
+      "利用者・ケアマネジャーからの相談内容を、LINEやFAXで相談員へ渡しやすい形に整理してください。",
       "",
-      "分類ルール:",
-      "activity_items は、排泄・入浴・外出・その他の活動から該当するものを選んでください。",
-      "improvement_actions は、①改善しようとしている生活動作として、立ち上がり、移乗、歩行、段差昇降、出入り、姿勢保持、排泄動作、入浴動作などを具体的に書いてください。",
-      "difficulty_details は、①の具体的な困難な状況を、場所・動作・危険性が分かるように書いてください。",
-      "purpose_effects は、③改修目的・期待効果の該当項目と、それに対する改修の方針コメントを書いてください。",
-      "renovation_items は、④改修項目（改修箇所）の該当項目と、場所・内容・コメントを書いてください。",
+      "候補選定・理由づけの際は、必ず以下の判断軸を考慮してください。",
+      "・転倒リスクの有無や場所（玄関／浴室／トイレ／夜間の移動等）",
+      "・動作の困難さの種類（立ち上がり／移乗／歩行／段差昇降等）",
+      "・住環境の制約（段差・廊下幅・手すり設置スペースの有無等）",
+      "・緊急度（すぐ導入すべきか、様子を見てよいか）",
+      "・家族や介護者の介助力（相談内容に記載があれば）",
       "",
-      "JSON形式:",
+      "ステップ1：概況の個別出力として、user_status、care_status、life_change_goalを個別の文章で出力してください。",
+      "",
+      "ステップ2：①改善しようとしている生活動作を、以下の文言と完全一致で選択してください。存在しない項目の作成や表記変更は禁止です。",
+      "【排泄】トイレまでの移動 / トイレ出入口の出入（扉の開閉を含む） / 便器からの立ち座り（移乗を含む） / 衣服の着脱 / 排泄時の姿勢保持 / 後始末 / その他（　　　）",
+      "【入浴】浴室までの移動 / 衣服の着脱 / 浴室出入口の出入（扉の開閉を含む） / 浴室内での移動（立ち座りを含む） / 洗い場での立ち座り（洗体・洗髪を含む） / 浴槽の出入（立ち座りを含む） / 浴槽内での姿勢保持 / その他（　　　）",
+      "【外出】出入口までの屋内移動 / 上がりかまちの昇降 / 車いす等、装具の着脱 / 履物の着脱 / 出入口の出入（扉の開閉を含む） / 出入口から敷地外までの屋外移動 / その他（　　　）",
+      "【その他の活動】その他（　　　）",
+      "",
+      "ステップ3：konnan_jokyoには、ステップ2で選択した項目それぞれについて、入力内容中の根拠に基づく具体的な困難な状況を書いてください。一般論だけで書かないでください。",
+      "",
+      "ステップ4：③改修目的・期待効果を、以下の文言と完全一致で選択してください。1つの改善したい生活動作につき複数選択可、最大4ブロックまでです。",
+      "できなかったことをできるようにする / 転倒等の防止、安全の確保 / 動作の容易性の確保 / 利用者の精神的負担や不安の軽減 / 介護者の負担の軽減 / その他（　　　）",
+      "kaishuu_mokutekiのhoushinは必ず『（　）することで、（　）が改善できる』という文型にしてください。例：廊下に手すりを設置することで、転倒等の防止、安全の確保が改善できる",
+      "",
+      "ステップ5：④改修項目（改修箇所）を、以下の文言と完全一致で選択し、locationsに玄関、廊下、トイレ等の箇所を入れてください。",
+      "手すりの取付け / 段差の解消 / 引き戸等への扉の取替え / 便器の取替え / 滑り防止等のための床材の変更 / その他",
+      "画面・PDF側で『項目名【箇所1、箇所2】』として表示します。",
+      "",
+      "注意点：",
+      "・項目名・表記は上記リストの文言と完全一致させること。言い換えや新規項目の作成は禁止。",
+      "・個人情報（氏名・住所・生年月日・要介護度・作成者情報）は一切生成しないこと。",
+      "・医療的な断定や介護保険の可否の断定は避け、入力内容に基づく一次アセスメントの範囲にとどめること。",
+      "・入力内容だけでは該当項目の判断が難しい場合、無理に選択せず、該当なしのままでよい。",
+      "・出力は必ずJSONのみ。説明文やMarkdownは付けないでください。",
+      "",
+      "出力JSON構造:",
       "{",
-      "  \"physical_status\": \"利用者の身体状況・介護状況を2〜4文で\",",
-      "  \"desired_life\": \"住宅改修により、利用者等は日常生活をどう変えたいかを2〜4文で\",",
-      "  \"activity_items\": [\"排泄\", \"入浴\", \"外出\", \"その他の活動\"],",
-      "  \"improvement_actions\": [{\"activity\": \"排泄\", \"action\": \"改善しようとしている生活動作\", \"comment\": \"補足コメント\"}],",
-      "  \"difficulty_details\": [{\"activity\": \"排泄\", \"situation\": \"具体的な困難な状況\"}],",
-      "  \"purpose_effects\": [{\"check\": \"転倒予防・動作の容易化など\", \"policy\": \"改修の方針・期待効果\"}],",
-      "  \"renovation_items\": [{\"check\": \"手すりの取付け等\", \"place\": \"改修箇所\", \"comment\": \"工事内容・理由\"}],",
-      "  \"handoff_note\": \"現地確認時に確認すべき点\"",
+      "  \"user_status\": \"利用者の身体状況\",",
+      "  \"care_status\": \"介護状況\",",
+      "  \"life_change_goal\": \"住宅改修により日常生活をどう変えたいか\",",
+      "  \"seikatsu_dousa\": [{ \"category\": \"排泄|入浴|外出|その他の活動\", \"items\": [\"選択した項目名\"] }],",
+      "  \"konnan_jokyo\": \"①に対する具体的な困難な状況\",",
+      "  \"kaishuu_mokuteki\": [{ \"items\": [\"選択した改修目的・期待効果\"], \"houshin\": \"〜することで、〜が改善できる\" }],",
+      "  \"kaishuu_koumoku\": [{ \"item\": \"改修項目名\", \"locations\": [\"箇所1\", \"箇所2\"] }]",
       "}",
       "",
       "相談内容:",
@@ -48,21 +77,40 @@ export default async function handler(req, res) {
 
     const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
-      headers: { "Authorization": "Bearer " + apiKey, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "gpt-4.1-mini", input: prompt, temperature: 0.2 })
+      headers: {
+        "Authorization": "Bearer " + apiKey,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "gpt-4.1-mini",
+        input: prompt,
+        temperature: 0.1
+      })
     });
 
     const data = await response.json();
-    if (!response.ok) return res.status(response.status).json({ ok: false, error: "OpenAI API error", detail: data });
-    const text = data.output_text || data.output?.flatMap(item => item.content || []).map(part => part.text || "").join("") || "";
+    if (!response.ok) {
+      return res.status(response.status).json({ ok: false, error: "OpenAI API error", detail: data });
+    }
+
+    const text = data.output_text ||
+      data.output?.flatMap(item => item.content || []).map(part => part.text || "").join("") ||
+      "";
+
     let result;
-    try { result = JSON.parse(text); } catch (parseError) {
+    try {
+      result = JSON.parse(text);
+    } catch (parseError) {
       const match = text.match(/\{[\s\S]*\}/);
       if (!match) throw parseError;
       result = JSON.parse(match[0]);
     }
+
     return res.status(200).json({ ok: true, result });
   } catch (error) {
-    return res.status(500).json({ ok: false, error: error.message || "住宅改修理由書の作成に失敗しました" });
+    return res.status(500).json({
+      ok: false,
+      error: error.message || "住宅改修理由書の作成に失敗しました"
+    });
   }
 }
