@@ -50,13 +50,100 @@ window.copyPublicUrl=window.copyPublicUrl||async function(){
 window.openAdminLogin=window.openAdminLogin||function(){document.querySelector("#adminLoginModal")?.classList.add("show");};
 window.closeAdminLogin=window.closeAdminLogin||function(){document.querySelector("#adminLoginModal")?.classList.remove("show");};
 window.handleAdminLogin=window.handleAdminLogin||function(event){event?.preventDefault?.();window.closeAdminLogin();window.switchView("admin");};
-window.handleSave=window.handleSave||function(event){event?.preventDefault?.();};
-window.handleDelete=window.handleDelete||function(){};
-window.clearForm=window.clearForm||function(){};
+window.handleSave=window.handleSave||async function(event){
+  event?.preventDefault?.();
+  const name=elements.nameInput.value.trim();
+  const category=elements.categoryInput.value;
+  if(!name||!category){toast("商品名と品目を入力してください");return}
+  const id=elements.productId.value||crypto.randomUUID();
+  const existing=products.find(product=>product.id===id);
+  const featureSet=new Set(currentFeatureTags);
+  (elements.featuresInput.value||"").split(/[、,\n]/).map(item=>item.trim()).filter(Boolean).forEach(item=>featureSet.add(item));
+  const photos=pendingPhotoPreviews.length?pendingPhotoPreviews:productPhotos(existing);
+  const product={
+    id,
+    name,
+    tais:elements.taisInput.value.trim(),
+    youtube:elements.youtubeInput.value.trim(),
+    category,
+    maker:category==="特殊寝台付属品"?elements.accessoryMakerInput.value.trim():elements.makerInput.value.trim(),
+    features:[...featureSet],
+    description:elements.descriptionInput.value.trim(),
+    spec:elements.specInput.value.trim(),
+    price:elements.priceInput.value.trim(),
+    score:Math.max(1,Math.min(5,Number(elements.scoreInput.value)||3)),
+    photo:photos[0]||"",
+    photos
+  };
+  const index=products.findIndex(item=>item.id===id);
+  if(index>=0)products[index]=product;else products.push(product);
+  saveProducts();
+  try{await saveProductsEverywhere?.()}catch(error){console.warn(error)}
+  renderMakerOptions?.();
+  renderFeatureFilters?.(false);
+  renderProducts?.();
+  renderAdmin?.();
+  renderCart?.();
+  clearForm?.();
+  toast("商品を保存しました");
+};
+window.handleDelete=window.handleDelete||function(){
+  const id=elements.productId.value;
+  if(!id){toast("削除する商品を一覧から選んでください");return}
+  products=products.filter(product=>product.id!==id);
+  cart=cart.filter(item=>item!==id);
+  saveProducts();
+  saveCart?.();
+  saveProductsEverywhere?.().catch?.(error=>console.warn(error));
+  renderFeatureFilters?.(false);
+  renderProducts?.();
+  renderAdmin?.();
+  renderCart?.();
+  clearForm?.();
+  toast("商品を削除しました");
+};
+window.clearForm=window.clearForm||function(){
+  elements.form?.reset();
+  elements.productId.value="";
+  elements.categoryInput.value="";
+  elements.makerInput.value="";
+  elements.accessoryMakerInput.value="";
+  currentFeatureTags=[];
+  pendingPhotoPreviews=[];
+  elements.photoInputs?.forEach(input=>input.value="");
+  renderFeatureTagList?.();
+  renderFeatureCandidateList?.();
+  renderPhotoPreview?.([]);
+  updateStarRating?.(3);
+  updateAccessoryMakerField?.();
+};
 window.saveSupabaseSettings=window.saveSupabaseSettings||function(){};
 window.loadProductsFromSupabase=window.loadProductsFromSupabase||async function(){};
 window.loadCategoryIconsFromSupabase=window.loadCategoryIconsFromSupabase||async function(){};
-window.renderAdmin=window.renderAdmin||function(){};
+window.renderAdmin=window.renderAdmin||function(){
+  renderAdminCategoryCards?.();
+  if(!elements.adminProducts)return;
+  elements.adminProducts.replaceChildren();
+  const list=products.filter(product=>!adminCategoryFilter||product.category===adminCategoryFilter);
+  if(!list.length){
+    const empty=document.createElement("p");
+    empty.className="empty";
+    empty.textContent=adminCategoryFilter?"この品目の商品はまだ登録されていません。":"登録済み商品はありません。";
+    elements.adminProducts.append(empty);
+    return;
+  }
+  list.forEach(product=>{
+    const row=document.createElement("button");
+    row.type="button";
+    row.className="admin-row";
+    row.innerHTML="<span><strong></strong><span></span></span><span></span>";
+    row.querySelector("strong").textContent=product.name;
+    row.querySelector("span span").textContent=[product.category,product.tais&&"TAIS: "+product.tais].filter(Boolean).join(" / ");
+    row.lastElementChild.textContent=starText?.(product.score)||"";
+    row.addEventListener("click",()=>editProduct?.(product.id));
+    elements.adminProducts.append(row);
+  });
+};
 window.renderCategoryIconAdmin=window.renderCategoryIconAdmin||function(){};
 window.runKeywordSearch=window.runKeywordSearch||function(){if(typeof renderProducts==="function")renderProducts();};
 window.resetFilters=window.resetFilters||function(){
@@ -375,6 +462,17 @@ function aiTriageText(){if(!aiTriageSummary)return "";const r=aiTriageSummary;co
 }
 function renovationLines(text){return String(text||"").split(/\n+/).filter(Boolean)}
 function makeRenovationReasonCanvas(){if(!renovationReasonSummary){toast("先にAIで整理してください");return null}const canvas=document.createElement("canvas");canvas.width=1240;canvas.height=7200;const ctx=canvas.getContext("2d");ctx.fillStyle="#fffef8";ctx.fillRect(0,0,canvas.width,canvas.height);const breaks=[];const r=renovationReasonSummary||{};const today=new Date().toLocaleDateString("ja-JP");ctx.fillStyle="#24352d";ctx.font="700 34px 'Yu Gothic', sans-serif";ctx.fillText("住宅改修理由書 AI整理シート",70,80);ctx.font="24px 'Yu Gothic', sans-serif";ctx.fillText("作成日 "+today,950,78);ctx.strokeStyle="#6fbd7b";ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(70,118);ctx.lineTo(1170,118);ctx.stroke();let y=155;const wrap=(text,x,maxWidth,font,lineHeight)=>{ctx.font=font;const chars=String(text||"").split("");let line="";const lines=[];chars.forEach(ch=>{const test=line+ch;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=ch}else line=test});if(line)lines.push(line);lines.forEach(lineText=>{ctx.fillText(lineText,x,y);y+=lineHeight});return lines.length};const sectionTitle=title=>{y+=10;ctx.fillStyle="#1f3a2e";ctx.font="700 25px 'Yu Gothic', sans-serif";ctx.fillText(title,70,y);y+=34;breaks.push(y)};const boxText=text=>{ctx.fillStyle="#24352d";ctx.font="21px 'Yu Gothic', sans-serif";String(text||"").split("\n").forEach(part=>wrap(part,90,1060,"21px 'Yu Gothic', sans-serif",31));y+=16;breaks.push(y)};sectionTitle("概況");boxText("【利用者の身体状況】"+(r.user_status||"未整理"));boxText("【介護状況】"+(r.care_status||"未整理"));boxText("【住宅改修により日常生活をどう変えたいか】"+(r.life_change_goal||"未整理"));sectionTitle("① 改善しようとしている生活動作");if(Array.isArray(r.seikatsu_dousa)&&r.seikatsu_dousa.length){r.seikatsu_dousa.forEach(group=>{boxText("□ "+(group.category||"分類未整理")+"："+(group.items||[]).join("、"))})}else boxText("該当項目なし");sectionTitle("② 具体的な困難な状況");boxText(r.konnan_jokyo||"未整理");sectionTitle("③ 改修目的・期待効果／改修の方針");if(Array.isArray(r.kaishuu_mokuteki)&&r.kaishuu_mokuteki.length){r.kaishuu_mokuteki.slice(0,4).forEach((item,index)=>{boxText((index+1)+". "+(item.items||[]).map(v=>"□ "+v).join("、")+"\n方針："+(item.houshin||"未整理"))})}else boxText("該当項目なし");sectionTitle("④ 改修項目（改修箇所）");if(Array.isArray(r.kaishuu_koumoku)&&r.kaishuu_koumoku.length){r.kaishuu_koumoku.forEach(item=>{const locations=(item.locations||[]).join("、");boxText("□ "+(item.item||"改修項目未整理")+(locations?"【"+locations+"】":""))})}else boxText("該当項目なし");y=Math.max(y+25,1380);ctx.strokeStyle="#b7ccb8";ctx.lineWidth=2;ctx.font="700 24px 'Yu Gothic', sans-serif";ctx.fillStyle="#24352d";ctx.fillText("利用者氏名",70,y);ctx.beginPath();ctx.moveTo(220,y+8);ctx.lineTo(560,y+8);ctx.stroke();ctx.fillText("被保険者番号",650,y);ctx.beginPath();ctx.moveTo(830,y+8);ctx.lineTo(1150,y+8);ctx.stroke();y+=78;ctx.fillText("住所",70,y);ctx.beginPath();ctx.moveTo(150,y+8);ctx.lineTo(1150,y+8);ctx.stroke();y+=78;ctx.fillText("要介護度",70,y);ctx.beginPath();ctx.moveTo(190,y+8);ctx.lineTo(420,y+8);ctx.stroke();ctx.fillText("作成者",520,y);ctx.beginPath();ctx.moveTo(620,y+8);ctx.lineTo(1150,y+8);ctx.stroke();y+=78;ctx.fillText("備考",70,y);ctx.strokeRect(150,y-30,1000,145);y+=150;const finalHeight=Math.max(1754,Math.min(canvas.height,y+80));const out=document.createElement("canvas");out.width=canvas.width;out.height=finalHeight;out.getContext("2d").drawImage(canvas,0,0,canvas.width,finalHeight,0,0,canvas.width,finalHeight);out.pageBreaks=breaks.filter(v=>v>0&&v<finalHeight);return out}function bindEvents(){elements.tabs.forEach(tab=>{if(tab.dataset.view){tab.addEventListener("click",()=>{if(tab.dataset.view==="finder"){showFinderCategories()}else{switchView(tab.dataset.view)}})}});elements.lineBackButton.addEventListener("click",()=>{if(elements.videoView.classList.contains("active")){closeVideoView()}else{hideLineBack()}});elements.videoViewBack.addEventListener("click",closeVideoView);elements.videoExternalOpen.addEventListener("click",()=>{if(elements.videoUrl)window.open(elements.videoUrl,"_blank","noopener")});elements.lineViewBack.addEventListener("click",hideLineBack);elements.firstGuideButton?.addEventListener("click",()=>{switchView("guide");requestAnimationFrame(()=>elements.guideView?.scrollIntoView({behavior:"smooth",block:"start"}))});elements.installGuideButton?.addEventListener("click",openInstallGuide);elements.showQrCodeButton?.addEventListener("click",openQrCodeModal);elements.closeQrCode?.addEventListener("click",closeQrCodeModal);elements.copyPublicUrlFromQr?.addEventListener("click",copyPublicUrl);elements.qrCodeModal?.addEventListener("click",event=>{if(event.target===elements.qrCodeModal)closeQrCodeModal()});elements.closeInstallGuide?.addEventListener("click",closeInstallGuide);elements.installAppButton?.addEventListener("click",installAppFromGuide);elements.installGuideModal?.addEventListener("click",event=>{if(event.target===elements.installGuideModal)closeInstallGuide()});elements.guideBack?.addEventListener("click",showFinderCategories);elements.guideStart?.addEventListener("click",showFinderCategories);elements.guideCart?.addEventListener("click",openCart);const guideSourceAdvisor=document.querySelector(".app-description .advisor-face");if(guideSourceAdvisor&&elements.guideAdvisor)elements.guideAdvisor.src=guideSourceAdvisor.src;elements.lineExternalOpen.addEventListener("click",()=>window.open("https://works.do/xPyoFyR","_blank","noopener"));elements.adminLogin.addEventListener("click",openAdminLogin);elements.adminLogin.addEventListener("touchend",event=>{event.preventDefault();openAdminLogin()},{passive:false});elements.adminLoginForm.addEventListener("submit",handleAdminLogin);elements.closeAdminLogin.addEventListener("click",closeAdminLogin);elements.adminLoginModal.addEventListener("click",event=>{if(event.target===elements.adminLoginModal)closeAdminLogin()});elements.categoryFilter.addEventListener("input",()=>{clearKeywordFilter();productPage=1;renderFeatureFilters(false);renderProducts()});elements.sortFilter.addEventListener("input",()=>{productPage=1;renderProducts()});elements.keywordFilter.addEventListener("input",()=>{productPage=1;renderProducts()});elements.keywordSearchButton?.addEventListener("click",runKeywordSearch);elements.keywordFilter?.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();runKeywordSearch()}});elements.resetFilters.addEventListener("click",resetFilters);elements.priceInput.addEventListener("input",sanitizePriceInput);elements.categoryInput.addEventListener("change",()=>{updateAccessoryMakerField();renderFeatureCandidateList()});elements.featureAdd?.addEventListener("click",addFeatureFromInput);elements.featuresInput?.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();addFeatureFromInput()}});elements.detailBack.addEventListener("click",showFinderCategories);elements.detailTopBack?.addEventListener("click",()=>{switchView("finder");requestAnimationFrame(scrollToResults)});elements.starRating?.querySelectorAll(".star-button").forEach(button=>button.addEventListener("click",()=>updateStarRating(button.dataset.score)));elements.form.addEventListener("submit",handleSave);elements.clearForm.addEventListener("click",clearForm);elements.deleteProduct.addEventListener("click",handleDelete);elements.saveSupabaseSettings.addEventListener("click",saveSupabaseSettings);elements.syncSupabaseProducts.addEventListener("click",async()=>{await loadProductsFromSupabase(true);await loadCategoryIconsFromSupabase(true)});elements.reloadCategoryIcons?.addEventListener("click",()=>loadCategoryIconsFromSupabase(true));elements.openCart.addEventListener("click",openCart);elements.topLineQuestion.addEventListener("click",openLineWithBack);elements.bottomFinder?.addEventListener("click",showFinderCategories);elements.bottomCart?.addEventListener("click",openCart);elements.bottomLine?.addEventListener("click",openLineWithBack);elements.backToFinder.addEventListener("click",showFinderCategories);elements.copyLineText.addEventListener("click",copyLineText);elements.showDemoImage?.addEventListener("click",()=>openDemoRequest("image"));elements.showDemoPdf?.addEventListener("click",()=>openDemoRequest("pdf"));elements.closeDemoPreview?.addEventListener("click",closeDemoPreview);elements.demoPreviewModal?.addEventListener("click",event=>{if(event.target===elements.demoPreviewModal)closeDemoPreview()});elements.downloadPreviewImage?.addEventListener("click",()=>downloadCanvasImage(demoPreviewCanvas));elements.downloadPreviewPdf?.addEventListener("click",()=>downloadPdfBlob(demoPreviewPdfBlob));elements.openGenkiLine.addEventListener("click",openLineWithBack);const openAiTriageView=()=>{switchView("aiTriage");requestAnimationFrame(()=>elements.aiTriageView?.scrollIntoView({behavior:"smooth",block:"start"}))};elements.openAiTriage?.addEventListener("click",openAiTriageView);elements.aiTriageBanner?.addEventListener("click",openAiTriageView);elements.guideAiTriageBanner?.addEventListener("click",openAiTriageView);const openRenovationReasonView=()=>{switchView("renovation");requestAnimationFrame(()=>elements.renovationView?.scrollIntoView({behavior:"smooth",block:"start"}))};elements.openRenovationReason?.addEventListener("click",openRenovationReasonView);elements.renovationBack?.addEventListener("click",showFinderCategories);elements.runRenovationReason?.addEventListener("click",runRenovationReason);elements.downloadRenovationWord?.addEventListener("click",downloadRenovationWord);elements.aiTriageBack?.addEventListener("click",()=>switchView("cart"));elements.runAiTriage?.addEventListener("click",runAiTriage);elements.closePhotoModal.addEventListener("click",closePhotoModal);elements.photoModal.addEventListener("click",event=>{if(event.target===elements.photoModal)closePhotoModal()});document.addEventListener("keydown",event=>{if(event.key==="Escape"){closePhotoModal();closeAdminLogin();closeDemoPreview();closeInstallGuide()}});elements.photoInputs.forEach(input=>input.addEventListener("change",async()=>{try{pendingPhotoPreviews=[];for(const photoInput of elements.photoInputs){if(photoInput.files[0])pendingPhotoPreviews.push(await readPhotoFile(photoInput.files[0]))}renderPhotoPreview(pendingPhotoPreviews)}catch(error){input.value="";pendingPhotoPreviews=[];toast(error.message)}}));elements.removePhoto.addEventListener("click",()=>{elements.photoInputs.forEach(input=>input.value="");pendingPhotoPreviews=[];const product=products.find(p=>p.id===elements.productId.value);if(product){product.photo="";product.photos=[]}renderPhotoPreview([])})}
+function updateFinderInitialState(){const noQuery=!elements.categoryFilter?.value&&!elements.keywordFilter?.value.trim();elements.finderView?.classList.toggle("finder-no-category",noQuery)}
+function clearKeywordFilter(){if(elements.keywordFilter)elements.keywordFilter.value=""}
+function runKeywordSearch(){productPage=1;renderFeatureFilters(true);renderProducts();requestAnimationFrame(scrollToResults)}
+function resetFilters(){elements.categoryFilter.value="";elements.sortFilter.value="recommend";elements.keywordFilter.value="";elements.featureFilters?.querySelectorAll(".feature-button.active").forEach(button=>button.classList.remove("active"));productPage=1;renderFeatureFilters(false);renderProducts()}
+function sanitizePriceInput(){elements.priceInput.value=elements.priceInput.value.replace(/[^\d,円￥~～\-]/g,"")}
+function renderFeatureTagList(){elements.featureTagList?.replaceChildren();currentFeatureTags.forEach(feature=>{const button=document.createElement("button");button.type="button";button.className="feature-button active";button.textContent=feature+" ×";button.addEventListener("click",()=>{currentFeatureTags=currentFeatureTags.filter(item=>item!==feature);renderFeatureTagList()});elements.featureTagList.append(button)})}
+function addFeatureFromInput(){const feature=elements.featuresInput.value.trim();if(!feature)return;if(!currentFeatureTags.includes(feature))currentFeatureTags.push(feature);elements.featuresInput.value="";renderFeatureTagList();renderFeatureCandidateList()}
+function renderFeatureCandidateList(){if(!elements.featureCandidateList)return;elements.featureCandidateList.replaceChildren();availableFeatures().filter(feature=>!currentFeatureTags.includes(feature)).slice(0,16).forEach(feature=>{const button=document.createElement("button");button.type="button";button.className="feature-button";button.textContent=feature;button.addEventListener("click",()=>{if(!currentFeatureTags.includes(feature))currentFeatureTags.push(feature);renderFeatureTagList();renderFeatureCandidateList()});elements.featureCandidateList.append(button)})}
+function renderAdminCategoryCards(){if(!elements.adminCategoryCards)return;elements.adminCategoryCards.replaceChildren();const all=document.createElement("button");all.type="button";all.className="category-card";all.classList.toggle("active",!adminCategoryFilter);all.innerHTML="<strong>すべて</strong><span>"+products.length+"件の商品</span>";all.addEventListener("click",()=>{adminCategoryFilter="";renderAdmin()});elements.adminCategoryCards.append(all);categories.forEach(category=>{const count=products.filter(product=>product.category===category).length;const button=document.createElement("button");button.type="button";button.className="category-card";button.classList.toggle("active",adminCategoryFilter===category);button.innerHTML="<strong></strong><span></span>";button.querySelector("strong").textContent=category;button.querySelector("span").textContent=count+"件の商品";button.addEventListener("click",()=>{adminCategoryFilter=category;renderAdmin()});elements.adminCategoryCards.append(button)})}
+function editProduct(id){const product=products.find(item=>item.id===id);if(!product)return;elements.productId.value=product.id;elements.nameInput.value=product.name||"";elements.taisInput.value=product.tais||"";elements.youtubeInput.value=product.youtube||"";elements.categoryInput.value=product.category||"";elements.makerInput.value=product.category==="特殊寝台付属品"?"":product.maker||"";elements.accessoryMakerInput.value=product.category==="特殊寝台付属品"?product.maker||"":"";elements.descriptionInput.value=product.description||"";elements.specInput.value=product.spec||"";elements.priceInput.value=product.price||"";currentFeatureTags=[...(product.features||[])];pendingPhotoPreviews=[];elements.photoInputs?.forEach(input=>input.value="");updateAccessoryMakerField();updateStarRating(product.score||3);renderFeatureTagList();renderFeatureCandidateList();renderPhotoPreview(productPhotos(product));elements.form?.scrollIntoView({behavior:"smooth",block:"start"})}
+function renderAdmin(){renderAdminCategoryCards();if(!elements.adminProducts)return;elements.adminProducts.replaceChildren();const list=products.filter(product=>!adminCategoryFilter||product.category===adminCategoryFilter);if(!list.length){const empty=document.createElement("p");empty.className="empty";empty.textContent=adminCategoryFilter?"この品目の商品はまだ登録されていません。":"登録済み商品はありません。";elements.adminProducts.append(empty);return}list.forEach(product=>{const row=document.createElement("button");row.type="button";row.className="admin-row";row.innerHTML="<span><strong></strong><span></span></span><span></span>";row.querySelector("strong").textContent=product.name;row.querySelector("span span").textContent=[product.category,product.tais&&"TAIS: "+product.tais].filter(Boolean).join(" / ");row.lastElementChild.textContent=starText(product.score);row.addEventListener("click",()=>editProduct(product.id));elements.adminProducts.append(row)})}
 setupOptions();arrangeFinderLayout();applySupabaseSettings();bindEvents();switchView("finder",true);renderFeatureFilters(false);renderProducts();renderAdmin();renderCategoryIconAdmin();renderCart();clearForm();loadProductsFromSupabase(false).then(()=>loadCategoryIconsFromSupabase(false));
 </script>
 
