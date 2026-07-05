@@ -424,6 +424,11 @@ body{padding-bottom:116px!important}
 .bottom-cart-count-badge{position:absolute;right:-8px;top:-8px;display:none;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#66b969;color:#fff;border:2px solid #fff;font-size:.74rem;font-weight:1000;line-height:1;box-shadow:0 4px 10px rgba(60,120,60,.22)}
 .bottom-cart-count-badge.show{display:grid}
 body.admin-active .topbar .tabs{display:none!important}
+/* Final badge position: keep selected count on the bottom cart icon only */
+#floatingCartCount,.floating-cart-count{display:none!important;visibility:hidden!important;opacity:0!important;width:0!important;height:0!important;min-width:0!important;min-height:0!important;overflow:hidden!important;z-index:-1!important}
+.mobile-bottom-nav #bottomCart span.bottom-cart-count-badge,#bottomCart span.bottom-cart-count-badge{position:absolute!important;right:-12px!important;top:-12px!important;z-index:3!important;display:none!important;place-items:center!important;width:30px!important;height:30px!important;min-width:30px!important;min-height:30px!important;padding:0!important;border-radius:999px!important;background:#ffb53f!important;color:#fff!important;border:3px solid #fff!important;font-size:1rem!important;font-weight:1000!important;line-height:1!important;box-shadow:0 6px 14px rgba(196,120,18,.34)!important}
+.mobile-bottom-nav #bottomCart span.bottom-cart-count-badge.show,#bottomCart span.bottom-cart-count-badge.show{display:grid!important}
+@media(max-width:560px){.mobile-bottom-nav #bottomCart span.bottom-cart-count-badge,#bottomCart span.bottom-cart-count-badge{right:-13px!important;top:-13px!important;width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important;font-size:.95rem!important}}
 </style>
 </head>
 <body>
@@ -801,11 +806,7 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
     return button;
   }
   function updateFloatingCart(){
-    const button=ensureFloatingCart();
-    const count=cartCount();
-    button.querySelector('.cart-count-number').textContent=String(count);
-    button.classList.toggle('show',count>0);
-    button.setAttribute('aria-label',count>0?'選定した商品 '+count+'点を見る':'選定した商品を見る');
+    document.querySelector('#floatingCartCount')?.remove();
   }
   function polishTopNavigation(){
     ensureHeaderLineButton();
