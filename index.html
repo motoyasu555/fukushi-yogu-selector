@@ -429,6 +429,16 @@ body.admin-active .topbar .tabs{display:none!important}
 .mobile-bottom-nav #bottomCart span.bottom-cart-count-badge,#bottomCart span.bottom-cart-count-badge{position:absolute!important;right:-12px!important;top:-12px!important;z-index:3!important;display:none!important;place-items:center!important;width:30px!important;height:30px!important;min-width:30px!important;min-height:30px!important;padding:0!important;border-radius:999px!important;background:#ffb53f!important;color:#fff!important;border:3px solid #fff!important;font-size:1rem!important;font-weight:1000!important;line-height:1!important;box-shadow:0 6px 14px rgba(196,120,18,.34)!important}
 .mobile-bottom-nav #bottomCart span.bottom-cart-count-badge.show,#bottomCart span.bottom-cart-count-badge.show{display:grid!important}
 @media(max-width:560px){.mobile-bottom-nav #bottomCart span.bottom-cart-count-badge,#bottomCart span.bottom-cart-count-badge{right:-13px!important;top:-13px!important;width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important;font-size:.95rem!important}}
+/* Final AI consultation entry */
+#openRenovationReason,#openAiTriageTop{display:none!important}
+.topbar .tabs{width:min(980px,100%)!important;max-width:980px!important;gap:14px!important}
+.topbar .tab[data-view="finder"],.topbar #openAiConsultTop{flex:1 1 0!important;min-height:82px!important;border-radius:26px!important;font-size:clamp(1.25rem,2.6vw,1.7rem)!important;font-weight:1000!important}
+.topbar #openAiConsultTop{display:flex!important;align-items:center!important;justify-content:center!important;gap:10px!important;background:linear-gradient(180deg,#79c8ff,#2f8bd3)!important;color:#fff!important;border:0!important;box-shadow:0 8px 0 rgba(38,103,166,.25),0 18px 34px rgba(47,139,211,.24)!important}
+.topbar #openAiConsultTop::before{content:"AI";display:inline-grid;place-items:center;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.24);font-size:1rem;font-weight:1000}
+body.ai-consult-active #guideView .guide-head,body.ai-consult-active #guideView .guide-message,body.ai-consult-active #guideView .guide-steps,body.ai-consult-active #guideView .guide-actions{display:none!important}
+body.ai-consult-active #guideView .guide-page{max-width:980px}
+body.ai-consult-active #guideView .guide-ai-cta{margin-top:0}
+@media(max-width:760px){.topbar .tabs{grid-template-columns:1fr!important;gap:10px!important}.topbar #openAiConsultTop{min-height:76px!important;border-radius:24px!important;font-size:1.28rem!important}.topbar #openAiConsultTop::before{width:40px;height:40px}}
 </style>
 </head>
 <body>
@@ -979,7 +989,62 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
   setTimeout(finalMenuPolish,100);
   setTimeout(finalMenuPolish,800);
 })();
-</script></body>
+</script><script>
+  (function(){
+    function activateView(name){
+      if(typeof window.switchView==='function'){
+        window.switchView(name);
+        return;
+      }
+      document.querySelectorAll('.view').forEach(view=>view.classList.remove('active'));
+      document.querySelector('#'+name+'View')?.classList.add('active');
+      document.querySelectorAll('.topbar .tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.view===name));
+    }
+    function showAiConsultMenu(){
+      document.body.classList.add('ai-consult-active');
+      activateView('guide');
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        const target=document.querySelector('#guideView .guide-ai-cta')||document.querySelector('#guideView');
+        target?.scrollIntoView({behavior:'auto',block:'start'});
+      }));
+    }
+    function leaveAiConsultMenu(){
+      document.body.classList.remove('ai-consult-active');
+    }
+    function ensureAiConsultButton(){
+      const finder=document.querySelector('.topbar .tab[data-view="finder"]');
+      if(!finder)return;
+      let button=document.querySelector('#openAiConsultTop');
+      if(!button){
+        button=document.createElement('button');
+        button.id='openAiConsultTop';
+        button.className='tab ai-consult-main';
+        button.type='button';
+        button.textContent='AIに相談する';
+        finder.insertAdjacentElement('afterend',button);
+      }
+      if(!button.dataset.finalAiConsultBound){
+        button.dataset.finalAiConsultBound='true';
+        button.addEventListener('click',event=>{
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          showAiConsultMenu();
+        },true);
+      }
+      if(!finder.dataset.finalAiConsultLeaveBound){
+        finder.dataset.finalAiConsultLeaveBound='true';
+        finder.addEventListener('click',leaveAiConsultMenu,true);
+      }
+    }
+    document.addEventListener('click',event=>{
+      if(event.target.closest('#bottomFinder,.tab[data-view="finder"],#backToFinder,#guideBack'))leaveAiConsultMenu();
+    },true);
+    document.addEventListener('DOMContentLoaded',ensureAiConsultButton);
+    setTimeout(ensureAiConsultButton,100);
+    setTimeout(ensureAiConsultButton,800);
+  })();
+  </script>
+</body>
 </html>
 
 
