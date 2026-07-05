@@ -439,6 +439,40 @@ body.ai-consult-active #guideView .guide-head,body.ai-consult-active #guideView 
 body.ai-consult-active #guideView .guide-page{max-width:980px}
 body.ai-consult-active #guideView .guide-ai-cta{margin-top:0}
 @media(max-width:760px){.topbar .tabs{grid-template-columns:1fr!important;gap:10px!important}.topbar #openAiConsultTop{min-height:76px!important;border-radius:24px!important;font-size:1.28rem!important}.topbar #openAiConsultTop::before{width:40px;height:40px}}
+/* Final touch: portrait layout, clear feedback, and easier preview close */
+@media(orientation:portrait) and (max-width:1180px){.topbar .tabs{display:flex!important;flex-direction:column!important;width:100%!important;max-width:100%!important}.topbar .tab[data-view="finder"],.topbar #openAiConsultTop{width:100%!important;flex:0 0 auto!important}}
+.action-toast.final-add-feedback{left:50%!important;right:auto!important;bottom:calc(116px + env(safe-area-inset-bottom))!important;z-index:120!important;display:none!important;grid-template-columns:1fr!important;gap:10px!important;width:min(430px,calc(100vw - 24px))!important;padding:14px!important;border:2px solid #8bd99a!important;border-radius:18px!important;background:#fff!important;color:#173f39!important;box-shadow:0 18px 40px rgba(50,100,60,.22)!important}
+.action-toast.final-add-feedback.show{display:grid!important}
+.action-toast.final-add-feedback p{display:flex!important;align-items:center!important;gap:10px!important;margin:0!important;font-size:1.02rem!important;font-weight:1000!important;line-height:1.45!important}
+.action-toast.final-add-feedback p:before{content:"✓";display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border-radius:50%;background:#66b969;color:#fff;font-size:1.2rem;font-weight:1000}
+.action-toast.final-add-feedback button{min-height:46px!important;border-radius:14px!important;background:linear-gradient(180deg,#eafff1,#a9efc1)!important;color:#17663a!important;font-weight:1000!important}
+.demo-preview-panel .icon-btn,#closeDemoPreview{width:58px!important;height:58px!important;min-width:58px!important;min-height:58px!important;border-radius:50%!important;background:#fff3d8!important;color:#8a5a00!important;border:2px solid #f0c76d!important;font-size:2rem!important;box-shadow:0 8px 18px rgba(130,90,20,.18)!important}
+.photo-modal button{width:58px!important;height:58px!important;font-size:2rem!important;border:2px solid #f0c76d!important;box-shadow:0 8px 18px rgba(130,90,20,.18)!important}
+body.cart-title-focus .topbar{display:none!important}
+body.cart-title-focus main{padding-top:12px!important}
+@media(max-width:560px){.action-toast.final-add-feedback{bottom:calc(104px + env(safe-area-inset-bottom))!important}.demo-preview-panel .icon-btn,#closeDemoPreview,.photo-modal button{width:54px!important;height:54px!important;min-width:54px!important;min-height:54px!important;font-size:1.85rem!important}}
+/* Final preview polish: keep bottom menu away from preview */
+body.preview-open{padding-bottom:0!important;overflow:hidden!important}
+body.preview-open .mobile-bottom-nav{display:none!important}
+body.preview-open .demo-preview-modal{z-index:240!important;padding:10px!important}
+body.preview-open .demo-preview-panel{width:min(1040px,98vw)!important;max-height:calc(100svh - 20px)!important;grid-template-rows:auto minmax(0,1fr) auto auto!important}
+body.preview-open .demo-preview-body{max-height:calc(100svh - 210px)!important;min-height:0!important;overflow:auto!important}
+body.preview-open .demo-preview-image{max-height:none!important;width:auto!important;max-width:100%!important}
+body.preview-open .photo-modal{z-index:240!important}
+@supports selector(body:has(.demo-preview-modal.show)){body:has(.demo-preview-modal.show),body:has(.photo-modal.show){padding-bottom:0!important;overflow:hidden!important}body:has(.demo-preview-modal.show) .mobile-bottom-nav,body:has(.photo-modal.show) .mobile-bottom-nav{display:none!important}.photo-modal.show{z-index:240!important}}
+@media(max-width:560px){body.preview-open .demo-preview-modal{padding:6px!important}body.preview-open .demo-preview-panel{max-height:calc(100svh - 12px)!important;padding:8px!important}body.preview-open .demo-preview-body{max-height:calc(100svh - 206px)!important}}
+/* Final admin modal and portrait hero button order */
+.admin-login-modal{z-index:320!important}
+.admin-login-modal.show{display:flex!important}
+.admin-login-panel{position:relative!important;z-index:321!important}
+body.admin-login-open .topbar .tabs,
+body:has(.admin-login-modal.show) .topbar .tabs{position:relative!important;z-index:1!important;pointer-events:none!important}
+body.admin-login-open .topbar .tab[data-view="finder"],
+body.admin-login-open .topbar #openAiConsultTop,
+body:has(.admin-login-modal.show) .topbar .tab[data-view="finder"],
+body:has(.admin-login-modal.show) .topbar #openAiConsultTop{position:relative!important;z-index:1!important}
+@media(max-width:1180px) and (orientation:portrait){.topbar .tabs{display:flex!important;flex-direction:column!important;width:100%!important;max-width:100%!important}.topbar .tab[data-view="finder"],.topbar #openAiConsultTop{display:flex!important;width:100%!important;max-width:100%!important;flex:0 0 auto!important}}
+@media(max-width:860px){.topbar .tabs{display:flex!important;flex-direction:column!important;width:100%!important;max-width:100%!important}.topbar .tab[data-view="finder"],.topbar #openAiConsultTop{display:flex!important;width:100%!important;max-width:100%!important;flex:0 0 auto!important}}
 </style>
 </head>
 <body>
@@ -519,10 +553,7 @@ function downloadBlob(blob,filename){if(!blob){toast("保存する内容があ�
 function downloadCanvasImage(canvas){if(!canvas){toast("先にプレビューを作成してください");return}const save=blob=>{if(blob)downloadBlob(blob,"福祉用具デモ依頼書.png");else{const a=document.createElement("a");a.href=canvas.toDataURL("image/png");a.download="福祉用具デモ依頼書.png";document.body.append(a);a.click();a.remove()}};if(canvas.toBlob)canvas.toBlob(save,"image/png");else save(null)}
 function downloadPdfBlob(blob){if(!blob){toast("先にPDFプレビューを作成してください");return}downloadBlob(blob,"福祉用具デモ依頼書.pdf")}
 function jpegBytesFromDataUrl(dataUrl){const bin=atob(dataUrl.split(",")[1]||"");const bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);return bytes}
-function pdfFromCanvas(sourceCanvas){const pageW=1240,pageH=1754,contentH=1620,footerY=1708;const rawBreaks=Array.isArray(sourceCanvas.pageBreaks)?sourceCanvas.pageBreaks.slice().sort((a,b)=>a-b):[];const slices=[];let top=0;while(top<sourceCanvas.height-1){const limit=Math.min(sourceCanvas.height,top+contentH);let bottom=limit;const candidates=rawBreaks.filter(v=>v>top+220&&v<=limit);if(candidates.length&&limit<sourceCanvas.height)bottom=candidates[candidates.length-1];if(bottom<=top+120)bottom=limit;slices.push({top,bottom});top=bottom}const pageCanvases=slices.map((slice,index)=>{const c=document.createElement("canvas");c.width=pageW;c.height=pageH;const ctx=c.getContext("2d");ctx.fillStyle="#ffffff";ctx.fillRect(0,0,pageW,pageH);const h=slice.bottom-slice.top;ctx.drawImage(sourceCanvas,0,slice.top,sourceCanvas.width,h,0,0,pageW,Math.min(h,contentH));ctx.fillStyle="#6d7f73";ctx.font="20px 'Yu Gothic', sans-serif";ctx.textAlign="center";ctx.fillText((index+1)+"/"+slices.length+"ページ",pageW/2,footerY);return c});const enc=new TextEncoder();const parts=[];let offset=0;const offsets=[0];const add=data=>{const bytes=typeof data==="string"?enc.encode(data):data;parts.push(bytes);offset+=bytes.length};const addObj=(id,body)=>{offsets[id]=offset;add(id+" 0 obj\n");if(Array.isArray(body)){body.forEach(add)}else add(body);add("\nendobj\n")};add("%PDF-1.4\n%âãÏÓ\n");const total=pageCanvases.length;const pageIds=pageCanvases.map((_,i)=>3+i*3);addObj(1,"<< /Type /Catalog /Pages 2 0 R >>");addObj(2,"<< /Type /Pages /Kids ["+pageIds.map(id=>id+" 0 R").join(" ")+"] /Count "+total+" >>");pageCanvases.forEach((c,i)=>{const pageId=3+i*3,contentId=4+i*3,imageId=5+i*3;const jpg=jpegBytesFromDataUrl(c.toDataURL("image/jpeg",0.92));const stream="q 595.28 0 0 841.89 0 0 cm /Im0 Do Q";addObj(pageId,"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /XObject << /Im0 "+imageId+" 0 R >> >> /Contents "+contentId+" 0 R >>");addObj(contentId,"<< /Length "+stream.length+" >>\nstream\n"+stream+"\nendstream");addObj(imageId,["<< /Type /XObject /Subtype /Image /Width "+c.width+" /Height "+c.height+" /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length "+jpg.length+" >>\nstream\n",jpg,"\nendstream"])});const xref=offset;add("xref\n0 "+(3+total*3)+"\n0000000000 65535 f \n");for(let i=1;i<3+total*3;i++)add(String(offsets[i]).padStart(10,"0")+" 00000 n \n");add("trailer\n<< /Size "+(3+total*3)+" /Root 1 0 R >>\nstartxref\n"+xref+"\n%%EOF");return new Blob(parts,{type:"application/pdf"})}
-
-function escapeHtml(value){return String(value??"").replace(/[&<>"']/g,char=>{if(char==="&")return"&amp;";if(char==="<")return"&lt;";if(char===">")return"&gt;";if(char==='"')return"&quot;";return"&#39;"})}
-function aiTriageText(){if(!aiTriageSummary)return "";const r=aiTriageSummary;const lines=["","【福祉用具ご相談内容】"];if(r.summary)lines.push("■お困りごと: "+r.summary);if(Array.isArray(r.candidates)&&r.candidates.length){lines.push("■おすすめ候補:");r.candidates.forEach(c=>lines.push("・"+(c.item||"")+"（理由: "+(c.reason||"")+"）"))}if(r.handoff_note)lines.push("■申し送り: "+r.handoff_note);return lines.join("\n")}function appendAiSelectedProducts(box){const selected=selectedCartEntries();const wrap=document.createElement("div");wrap.className="ai-selected-products";const title=document.createElement("h4");title.textContent="現在選定している商品";wrap.append(title);if(!selected.length){const empty=document.createElement("p");empty.className="empty";empty.textContent="現在、選定している商品はありません。AI整理内容のみで依頼書を作成できます。";wrap.append(empty)}else{const ul=document.createElement("ul");selected.forEach(item=>{const p=item.product;const li=document.createElement("li");li.textContent=p.name+"（"+p.category+(p.tais?" / TAIS: "+p.tais:"")+"）";ul.append(li)});wrap.append(ul)}box.append(wrap)} function renderAiTriageResult(result){aiTriageSummary=result;const box=elements.aiTriageResult;if(!box)return;box.hidden=false;box.innerHTML="";const title=document.createElement("h3");title.textContent="AI整理結果";box.append(title);if(result.summary){const p=document.createElement("p");p.innerHTML="<strong>要点：</strong>"+escapeHtml(result.summary);box.append(p)}if(Array.isArray(result.candidates)&&result.candidates.length){const h=document.createElement("p");h.innerHTML="<strong>おすすめ候補：</strong>";box.append(h);result.candidates.forEach(c=>{const div=document.createElement("div");div.className="ai-candidate";div.innerHTML="<strong></strong><br><span></span>";div.querySelector("strong").textContent=c.item||"候補";div.querySelector("span").textContent=c.reason||"";box.append(div)})}if(result.handoff_note){const p=document.createElement("p");p.innerHTML="<strong>申し送り：</strong>"+escapeHtml(result.handoff_note);box.append(p)}appendAiSelectedProducts(box);const note=document.createElement("p");note.className="ai-triage-copy-note";note.textContent="この内容はLINEコピー・画像・PDFにも追加されます。";box.append(note);const actions=document.createElement("div");actions.className="ai-result-actions";actions.innerHTML="<button class=\"line-copy\" type=\"button\">LINE送信用にコピー</button><button class=\"demo-image-button\" type=\"button\">画像作成</button><button class=\"demo-pdf-button\" type=\"button\">PDF作成</button><button class=\"line-open\" type=\"button\">元気サポートLINEを開く</button>";actions.querySelector(".line-copy").addEventListener("click",copyLineText);actions.querySelector(".demo-image-button").addEventListener("click",()=>openDemoRequest("image"));actions.querySelector(".demo-pdf-button").addEventListener("click",()=>openDemoRequest("pdf"));actions.querySelector(".line-open").addEventListener("click",openLineWithBack);box.append(actions)}function renovationReasonText(){if(!renovationReasonSummary)return "";const r=renovationReasonSummary;const lines=["【住宅改修理由書 AI整理内容】",""];if(r.user_status){lines.push("■利用者の身体状況",r.user_status,"")}if(r.care_status){lines.push("■介護状況",r.care_status,"")}if(r.life_change_goal){lines.push("■住宅改修により利用者等は日常生活をどう変えたいか",r.life_change_goal,"")}if(Array.isArray(r.seikatsu_dousa)&&r.seikatsu_dousa.length){lines.push("■①改善しようとしている生活動作");r.seikatsu_dousa.forEach(group=>{if(!group)return;const category=group.category||"分類未整理";(group.items||[]).forEach(item=>lines.push("□ "+category+"："+item))});lines.push("")}if(r.konnan_jokyo){lines.push("■②具体的な困難な状況",r.konnan_jokyo,"")}if(Array.isArray(r.kaishuu_mokuteki)&&r.kaishuu_mokuteki.length){lines.push("■③改修目的・期待効果／改修の方針");r.kaishuu_mokuteki.forEach((item,index)=>{const checks=(item.items||[]).map(v=>"□ "+v).join("、");lines.push((index+1)+". "+checks);if(item.houshin)lines.push("方針："+item.houshin)});lines.push("")}if(Array.isArray(r.kaishuu_koumoku)&&r.kaishuu_koumoku.length){lines.push("■④改修項目（改修箇所）");r.kaishuu_koumoku.forEach(item=>{const locations=(item.locations||[]).join("、");lines.push("□ "+(item.item||"改修項目未整理")+(locations?"【"+locations+"】":""))});lines.push("")}return lines.join("\n")}function renderRenovationResult(result){renovationReasonSummary=result;const box=elements.renovationResult;if(!box)return;box.hidden=false;box.innerHTML="<h3>AI整理結果</h3>";const addSection=(title,text)=>{if(!text)return;const sec=document.createElement("section");sec.innerHTML="<strong>"+escapeHtml(title)+"</strong><p>"+escapeHtml(text)+"</p>";box.append(sec)};addSection("利用者の身体状況",result.user_status);addSection("介護状況",result.care_status);addSection("住宅改修により利用者等は日常生活をどう変えたいか",result.life_change_goal);if(Array.isArray(result.seikatsu_dousa)&&result.seikatsu_dousa.length){const sec=document.createElement("section");sec.innerHTML="<strong>①改善しようとしている生活動作</strong>";const ul=document.createElement("ul");result.seikatsu_dousa.forEach(group=>{(group.items||[]).forEach(item=>{const li=document.createElement("li");li.textContent=(group.category||"分類未整理")+"："+item;ul.append(li)})});sec.append(ul);box.append(sec)}addSection("②具体的な困難な状況",result.konnan_jokyo);if(Array.isArray(result.kaishuu_mokuteki)&&result.kaishuu_mokuteki.length){const sec=document.createElement("section");sec.innerHTML="<strong>③改修目的・期待効果／改修の方針</strong>";const ul=document.createElement("ul");result.kaishuu_mokuteki.forEach(item=>{const li=document.createElement("li");li.textContent=(item.items||[]).join("、")+(item.houshin?"："+item.houshin:"");ul.append(li)});sec.append(ul);box.append(sec)}if(Array.isArray(result.kaishuu_koumoku)&&result.kaishuu_koumoku.length){const sec=document.createElement("section");sec.innerHTML="<strong>④改修項目（改修箇所）</strong>";const ul=document.createElement("ul");result.kaishuu_koumoku.forEach(item=>{const li=document.createElement("li");const locations=(item.locations||[]).join("、");li.textContent=(item.item||"改修項目未整理")+(locations?"【"+locations+"】":"");ul.append(li)});sec.append(ul);box.append(sec)}elements.renovationActions.hidden=false}async function runRenovationReason(){const input=elements.renovationInput?.value.trim()||"";if(!input){toast("住宅改修の相談内容を入力してください");return}elements.runRenovationReason.disabled=true;elements.renovationStatus.textContent="AIが理由書内容を整理しています...";try{const res=await fetch("/api/renovation",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({input})});const data=await res.json();if(!res.ok||!data.ok)throw new Error(data.error||data.detail||"AI整理に失敗しました");renderRenovationResult(data.result);elements.renovationStatus.textContent="整理できました。";toast("住宅改修理由書の内容を整理しました")}catch(error){elements.renovationStatus.textContent="AI整理に失敗しました。時間をおいて再度お試しください。";toast(error.message||"AI整理に失敗しました")}finally{elements.runRenovationReason.disabled=false}}function downloadRenovationWord(){
+function pdfFromCanvas(sourceCanvas){if(!sourceCanvas)return null;const pageW=595.28;const pageH=Math.max(841.89,pageW*(sourceCanvas.height/sourceCanvas.width));const jpg=jpegBytesFromDataUrl(sourceCanvas.toDataURL("image/jpeg",0.92));const enc=new TextEncoder();const parts=[];let offset=0;const offsets=[0];const add=data=>{const bytes=typeof data==="string"?enc.encode(data):data;parts.push(bytes);offset+=bytes.length};const addObj=(id,body)=>{offsets[id]=offset;add(id+" 0 obj\n");if(Array.isArray(body)){body.forEach(add)}else add(body);add("\nendobj\n")};add("%PDF-1.4\n%âãÏÓ\n");addObj(1,"<< /Type /Catalog /Pages 2 0 R >>");addObj(2,"<< /Type /Pages /Kids [3 0 R] /Count 1 >>");addObj(3,"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 "+pageW.toFixed(2)+" "+pageH.toFixed(2)+"] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>");const stream="q "+pageW.toFixed(2)+" 0 0 "+pageH.toFixed(2)+" 0 0 cm /Im0 Do Q";addObj(4,"<< /Length "+stream.length+" >>\nstream\n"+stream+"\nendstream");addObj(5,["<< /Type /XObject /Subtype /Image /Width "+sourceCanvas.width+" /Height "+sourceCanvas.height+" /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length "+jpg.length+" >>\nstream\n",jpg,"\nendstream"]);const xref=offset;add("xref\n0 6\n0000000000 65535 f \n");for(let i=1;i<=5;i++)add(String(offsets[i]).padStart(10,"0")+" 00000 n \n");add("trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n"+xref+"\n%%EOF");return new Blob(parts,{type:"application/pdf"})}function renderRenovationResult(result){renovationReasonSummary=result;const box=elements.renovationResult;if(!box)return;box.hidden=false;box.innerHTML="<h3>AI整理結果</h3>";const addSection=(title,text)=>{if(!text)return;const sec=document.createElement("section");sec.innerHTML="<strong>"+escapeHtml(title)+"</strong><p>"+escapeHtml(text)+"</p>";box.append(sec)};addSection("利用者の身体状況",result.user_status);addSection("介護状況",result.care_status);addSection("住宅改修により利用者等は日常生活をどう変えたいか",result.life_change_goal);if(Array.isArray(result.seikatsu_dousa)&&result.seikatsu_dousa.length){const sec=document.createElement("section");sec.innerHTML="<strong>①改善しようとしている生活動作</strong>";const ul=document.createElement("ul");result.seikatsu_dousa.forEach(group=>{(group.items||[]).forEach(item=>{const li=document.createElement("li");li.textContent=(group.category||"分類未整理")+"："+item;ul.append(li)})});sec.append(ul);box.append(sec)}addSection("②具体的な困難な状況",result.konnan_jokyo);if(Array.isArray(result.kaishuu_mokuteki)&&result.kaishuu_mokuteki.length){const sec=document.createElement("section");sec.innerHTML="<strong>③改修目的・期待効果／改修の方針</strong>";const ul=document.createElement("ul");result.kaishuu_mokuteki.forEach(item=>{const li=document.createElement("li");li.textContent=(item.items||[]).join("、")+(item.houshin?"："+item.houshin:"");ul.append(li)});sec.append(ul);box.append(sec)}if(Array.isArray(result.kaishuu_koumoku)&&result.kaishuu_koumoku.length){const sec=document.createElement("section");sec.innerHTML="<strong>④改修項目（改修箇所）</strong>";const ul=document.createElement("ul");result.kaishuu_koumoku.forEach(item=>{const li=document.createElement("li");const locations=(item.locations||[]).join("、");li.textContent=(item.item||"改修項目未整理")+(locations?"【"+locations+"】":"");ul.append(li)});sec.append(ul);box.append(sec)}elements.renovationActions.hidden=false}async function runRenovationReason(){const input=elements.renovationInput?.value.trim()||"";if(!input){toast("住宅改修の相談内容を入力してください");return}elements.runRenovationReason.disabled=true;elements.renovationStatus.textContent="AIが理由書内容を整理しています...";try{const res=await fetch("/api/renovation",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({input})});const data=await res.json();if(!res.ok||!data.ok)throw new Error(data.error||data.detail||"AI整理に失敗しました");renderRenovationResult(data.result);elements.renovationStatus.textContent="整理できました。";toast("住宅改修理由書の内容を整理しました")}catch(error){elements.renovationStatus.textContent="AI整理に失敗しました。時間をおいて再度お試しください。";toast(error.message||"AI整理に失敗しました")}finally{elements.runRenovationReason.disabled=false}}function downloadRenovationWord(){
   if(!renovationReasonSummary){toast("先にAIで整理してください");return}
   const canvas=makeRenovationReasonCanvas();
   const blob=pdfFromCanvas(canvas);
@@ -1042,6 +1073,169 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
     document.addEventListener('DOMContentLoaded',ensureAiConsultButton);
     setTimeout(ensureAiConsultButton,100);
     setTimeout(ensureAiConsultButton,800);
+  })();
+  </script>
+  <script>
+  (function(){
+    function scrollToCartTitle(){
+      const run=()=>{
+        const target=document.querySelector('#cartTitle')||document.querySelector('#cartView .cart-page')||document.querySelector('#cartView');
+        if(!target)return;
+        const y=target.getBoundingClientRect().top+window.scrollY-8;
+        window.scrollTo({top:Math.max(0,y),behavior:'auto'});
+      };
+      requestAnimationFrame(()=>requestAnimationFrame(run));
+      setTimeout(run,80);
+      setTimeout(run,220);
+      setTimeout(run,520);
+    }
+    function showCartTitleTop(){
+      document.body.classList.add('cart-title-focus');
+      if(typeof window.showCartAtSelectedTop==='function')window.showCartAtSelectedTop();
+      else if(typeof window.openCart==='function')window.openCart();
+      else if(typeof window.switchView==='function')window.switchView('cart');
+      scrollToCartTitle();
+    }
+    function showAddFeedback(){
+      const box=document.querySelector('#actionToast');
+      if(!box)return;
+      box.className='action-toast final-add-feedback show';
+      box.innerHTML='<p>選定に追加しました</p><button type="button">選定した商品を見る</button>';
+      box.querySelector('button')?.addEventListener('click',event=>{
+        event.preventDefault();
+        box.classList.remove('show');
+        showCartTitleTop();
+      },{once:true});
+      clearTimeout(window.finalAddFeedbackTimer);
+      window.finalAddFeedbackTimer=setTimeout(()=>box.classList.remove('show'),2800);
+    }
+    function resetCartForNewAppSession(){
+      try{
+        if(sessionStorage.getItem('care-equipment-session-active'))return;
+        sessionStorage.setItem('care-equipment-session-active','1');
+        localStorage.removeItem('care-equipment-cart');
+        localStorage.removeItem('care-equipment-cart-excluded');
+        if(typeof cart!=='undefined')cart=[];
+        if(typeof cartExcluded!=='undefined')cartExcluded=[];
+        if(typeof saveCart==='function')saveCart();
+        if(typeof saveCartExcluded==='function')saveCartExcluded();
+        if(typeof renderCart==='function')renderCart();
+        if(typeof updateCartBadges==='function')updateCartBadges();
+      }catch(_){}
+    }
+    function bindFinalUsabilityFixes(){
+      resetCartForNewAppSession();
+      const guideCart=document.querySelector('#guideCart');
+      if(guideCart&&!guideCart.dataset.finalCartTopBound){
+        guideCart.dataset.finalCartTopBound='true';
+        guideCart.addEventListener('click',event=>{
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          showCartTitleTop();
+        },true);
+      }
+    }
+    document.addEventListener('click',event=>{
+      if(event.target.closest('.cart-add'))setTimeout(showAddFeedback,80);
+      if(event.target.closest('#bottomFinder,.tab[data-view="finder"],#backToFinder,#guideBack,#detailBack,#detailTopBack,#openAiConsultTop,#firstGuideButton'))document.body.classList.remove('cart-title-focus');
+    },true);
+    document.addEventListener('DOMContentLoaded',bindFinalUsabilityFixes);
+    setTimeout(bindFinalUsabilityFixes,100);
+    setTimeout(bindFinalUsabilityFixes,800);
+  })();
+  </script>
+  <script>
+  (function(){
+    function setPreviewOpen(open){
+      document.body.classList.toggle('preview-open',!!open);
+    }
+    function finalJpegBytes(dataUrl){
+      const bin=atob(String(dataUrl||'').split(',')[1]||'');
+      const bytes=new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+      return bytes;
+    }
+    function finalSinglePagePdfFromCanvas(sourceCanvas){
+      if(!sourceCanvas)return null;
+      const margin=0;
+      const pageW=595.28;
+      const pageH=Math.max(841.89,pageW*(sourceCanvas.height/sourceCanvas.width));
+      const jpg=finalJpegBytes(sourceCanvas.toDataURL('image/jpeg',0.92));
+      const enc=new TextEncoder();
+      const parts=[];
+      let offset=0;
+      const offsets=[0];
+      const add=data=>{
+        const bytes=typeof data==='string'?enc.encode(data):data;
+        parts.push(bytes);
+        offset+=bytes.length;
+      };
+      const addObj=(id,body)=>{
+        offsets[id]=offset;
+        add(id+' 0 obj\n');
+        if(Array.isArray(body))body.forEach(add);else add(body);
+        add('\nendobj\n');
+      };
+      add('%PDF-1.4\n%âãÏÓ\n');
+      addObj(1,'<< /Type /Catalog /Pages 2 0 R >>');
+      addObj(2,'<< /Type /Pages /Kids [3 0 R] /Count 1 >>');
+      addObj(3,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+pageW.toFixed(2)+' '+pageH.toFixed(2)+'] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>');
+      const drawW=pageW-margin*2;
+      const drawH=pageH-margin*2;
+      const stream='q '+drawW.toFixed(2)+' 0 0 '+drawH.toFixed(2)+' '+margin+' '+margin+' cm /Im0 Do Q';
+      addObj(4,'<< /Length '+stream.length+' >>\nstream\n'+stream+'\nendstream');
+      addObj(5,['<< /Type /XObject /Subtype /Image /Width '+sourceCanvas.width+' /Height '+sourceCanvas.height+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+jpg.length+' >>\nstream\n',jpg,'\nendstream']);
+      const xref=offset;
+      add('xref\n0 6\n0000000000 65535 f \n');
+      for(let i=1;i<=5;i++)add(String(offsets[i]).padStart(10,'0')+' 00000 n \n');
+      add('trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF');
+      return new Blob(parts,{type:'application/pdf'});
+    }
+    window.pdfFromCanvas=finalSinglePagePdfFromCanvas;
+    try{pdfFromCanvas=finalSinglePagePdfFromCanvas}catch(_){}
+    const previousOpen=window.openDemoRequest;
+    if(typeof previousOpen==='function'&&!previousOpen.finalPreviewWrapped){
+      const wrapped=function(){
+        const result=previousOpen.apply(this,arguments);
+        setTimeout(()=>setPreviewOpen(document.querySelector('#demoPreviewModal')?.classList.contains('show')),0);
+        setTimeout(()=>setPreviewOpen(document.querySelector('#demoPreviewModal')?.classList.contains('show')),120);
+        return result;
+      };
+      wrapped.finalPreviewWrapped=true;
+      window.openDemoRequest=wrapped;
+      try{openDemoRequest=wrapped}catch(_){}
+    }
+    const previousClose=window.closeDemoPreview;
+    if(typeof previousClose==='function'&&!previousClose.finalPreviewWrapped){
+      const wrappedClose=function(){
+        const result=previousClose.apply(this,arguments);
+        setPreviewOpen(false);
+        return result;
+      };
+      wrappedClose.finalPreviewWrapped=true;
+      window.closeDemoPreview=wrappedClose;
+      try{closeDemoPreview=wrappedClose}catch(_){}
+    }
+    document.addEventListener('click',event=>{
+      if(event.target.closest('#showDemoImage,#showDemoPdf'))setTimeout(()=>setPreviewOpen(true),120);
+      if(event.target.closest('#closeDemoPreview')||event.target===document.querySelector('#demoPreviewModal'))setPreviewOpen(false);
+    },true);
+    document.addEventListener('keydown',event=>{if(event.key==='Escape')setPreviewOpen(false)},true);
+  })();
+  </script>
+  <script>
+  (function(){
+    const modal=document.querySelector('#adminLoginModal');
+    if(!modal)return;
+    const sync=()=>document.body.classList.toggle('admin-login-open',modal.classList.contains('show'));
+    const observer=new MutationObserver(sync);
+    observer.observe(modal,{attributes:true,attributeFilter:['class','style','aria-hidden']});
+    document.addEventListener('click',event=>{
+      if(event.target.closest('#adminLogin,#bottomAdmin'))setTimeout(sync,0);
+      if(event.target.closest('#closeAdminLogin')||event.target===modal)setTimeout(sync,0);
+    },true);
+    document.addEventListener('keydown',event=>{if(event.key==='Escape')setTimeout(sync,0)},true);
+    sync();
   })();
   </script>
 </body>
