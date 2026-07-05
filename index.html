@@ -417,6 +417,13 @@ body{padding-bottom:116px!important}
 #bottomLine span{background:#23c449!important;color:#fff!important}
 #adminLogin span{background:#fff3d8!important;color:#d99022!important}
 @media(max-width:560px){body{padding-bottom:104px!important}.mobile-bottom-nav{gap:6px!important;padding-left:5px!important;padding-right:5px!important}.mobile-bottom-nav .bottom-nav-button{min-height:72px!important;border-radius:20px!important}.mobile-bottom-nav .bottom-nav-button span{width:34px!important;height:34px!important;min-width:34px!important;font-size:.78rem!important}.mobile-bottom-nav .bottom-nav-button strong{font-size:.72rem!important}}
+/* Final cleanup: no floating cart, use bottom cart badge */
+.app-description{display:none!important}
+#floatingCartCount,.floating-cart-count{display:none!important;pointer-events:none!important}
+#bottomCart span{position:relative!important}
+.bottom-cart-count-badge{position:absolute;right:-8px;top:-8px;display:none;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#66b969;color:#fff;border:2px solid #fff;font-size:.74rem;font-weight:1000;line-height:1;box-shadow:0 4px 10px rgba(60,120,60,.22)}
+.bottom-cart-count-badge.show{display:grid}
+body.admin-active .topbar .tabs{display:none!important}
 </style>
 </head>
 <body>
@@ -901,6 +908,75 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
   setTimeout(bindFinalRequestedPolish,100);
   setTimeout(bindFinalRequestedPolish,800);
   setTimeout(bindFinalRequestedPolish,1800);
+})();
+</script><script>
+(function(){
+  function selectedCount(){
+    const sources=[
+      document.querySelector('#openCart span')?.textContent,
+      document.querySelector('#cartCount')?.textContent,
+      document.querySelector('#cartPageCount')?.textContent
+    ];
+    for(const value of sources){
+      const raw=String(value||'').replace(/[^\d]/g,'');
+      if(raw)return Number(raw);
+    }
+    try{
+      const saved=JSON.parse(localStorage.getItem('care-equipment-cart')||'[]');
+      return Array.isArray(saved)?saved.length:0;
+    }catch(_){return 0}
+  }
+  function updateBottomCartBadge(){
+    const icon=document.querySelector('#bottomCart span');
+    if(!icon)return;
+    let badge=icon.querySelector('.bottom-cart-count-badge');
+    if(!badge){
+      badge=document.createElement('span');
+      badge.className='bottom-cart-count-badge';
+      icon.append(badge);
+    }
+    const count=selectedCount();
+    badge.textContent=String(count);
+    badge.classList.toggle('show',count>0);
+    document.querySelector('#floatingCartCount')?.remove();
+  }
+  function updateActiveViewClass(){
+    const active=document.querySelector('.view.active')?.id||'';
+    document.body.classList.toggle('admin-active',active==='adminView');
+  }
+  function finalMenuPolish(){
+    updateBottomCartBadge();
+    updateActiveViewClass();
+    document.querySelector('#floatingCartCount')?.remove();
+  }
+  const previousUpdate=window.updateCartBadges;
+  if(typeof previousUpdate==='function'&&!previousUpdate.finalBottomBadgeWrapped){
+    const wrapped=function(){
+      const result=previousUpdate.apply(this,arguments);
+      setTimeout(updateBottomCartBadge,0);
+      return result;
+    };
+    wrapped.finalBottomBadgeWrapped=true;
+    window.updateCartBadges=wrapped;
+  }
+  const previousSwitch=window.switchView;
+  if(typeof previousSwitch==='function'&&!previousSwitch.finalAdminClassWrapped){
+    const wrappedSwitch=function(){
+      const result=previousSwitch.apply(this,arguments);
+      setTimeout(finalMenuPolish,0);
+      setTimeout(finalMenuPolish,120);
+      return result;
+    };
+    wrappedSwitch.finalAdminClassWrapped=true;
+    window.switchView=wrappedSwitch;
+  }
+  const viewObserver=new MutationObserver(finalMenuPolish);
+  document.querySelectorAll('.view').forEach(view=>viewObserver.observe(view,{attributes:true,attributeFilter:['class']}));
+  document.addEventListener('click',()=>setTimeout(finalMenuPolish,80),true);
+  document.addEventListener('DOMContentLoaded',finalMenuPolish);
+  window.addEventListener('storage',finalMenuPolish);
+  setTimeout(finalMenuPolish,100);
+  setTimeout(finalMenuPolish,800);
 })();
 </script></body>
 </html>
