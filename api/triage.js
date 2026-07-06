@@ -60,18 +60,22 @@ export default async function handler(req, res) {
       home || "未入力"
     ].join("\n");
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 22000);
     const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
         Authorization: "Bearer " + apiKey,
         "Content-Type": "application/json"
       },
+      signal: controller.signal,
       body: JSON.stringify({
         model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
         input: prompt,
         text: { format: { type: "json_object" } }
       })
     });
+    clearTimeout(timeoutId);
 
     const data = await response.json();
 
