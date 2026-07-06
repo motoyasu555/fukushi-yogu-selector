@@ -1537,6 +1537,295 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
     try{aiTriageResultText=aiResultTextOnly;renderAiTriageResult=enhancedRenderAiTriageResult}catch(_){}
   })();
   </script>
+  <script>
+  (function(){
+    const ICON_SIZE=160;
+    const ICON_QUALITY=.78;
+    const LARGE_ICON_LENGTH=90000;
+    function iconDataSize(src){
+      return typeof src==="string"&&src.startsWith("data:image/")?src.length:0;
+    }
+    function dataUrlToImage(src){
+      return new Promise((resolve,reject)=>{
+        const img=new Image();
+        img.onload=()=>resolve(img);
+        img.onerror=()=>reject(new Error("画像を読み込めませんでした"));
+        img.src=src;
+      });
+    }
+    async function compressIconSource(src){
+      if(!src||!String(src).startsWith("data:image/"))return src;
+      const img=await dataUrlToImage(src);
+      const canvas=document.createElement("canvas");
+      canvas.width=ICON_SIZE;
+      canvas.height=ICON_SIZE;
+      const ctx=canvas.getContext("2d");
+      ctx.fillStyle="#ffffff";
+      ctx.fillRect(0,0,ICON_SIZE,ICON_SIZE);
+      const scale=Math.min(ICON_SIZE/img.width,ICON_SIZE/img.height);
+      const w=Math.max(1,Math.round(img.width*scale));
+      const h=Math.max(1,Math.round(img.height*scale));
+      const x=Math.round((ICON_SIZE-w)/2);
+      const y=Math.round((ICON_SIZE-h)/2);
+      ctx.imageSmoothingEnabled=true;
+      ctx.imageSmoothingQuality="high";
+      ctx.drawImage(img,x,y,w,h);
+      const webp=canvas.toDataURL("image/webp",ICON_QUALITY);
+      if(webp&&webp.length<src.length)return webp;
+      return canvas.toDataURL("image/jpeg",ICON_QUALITY);
+    }
+    async function compressIconFile(file){
+      if(!file||!file.type.startsWith("image/"))throw new Error("画像ファイルを選択してください");
+      const src=await new Promise((resolve,reject)=>{
+        const reader=new FileReader();
+        reader.onload=()=>resolve(reader.result);
+        reader.onerror=()=>reject(new Error("画像を読み込めませんでした"));
+        reader.readAsDataURL(file);
+      });
+      return compressIconSource(src);
+    }
+    async function optimizeLargeStoredIcons(showMessage=false){
+      if(!window.categoryIcons||typeof window.categoryIcons!=="object")return false;
+      let changed=false;
+      for(const category of Object.keys(window.categoryIcons)){
+        const src=window.categoryIcons[category];
+        if(iconDataSize(src)>LARGE_ICON_LENGTH){
+          try{
+            const optimized=await compressIconSource(src);
+            if(optimized&&optimized.length<src.length){
+              window.categoryIcons[category]=optimized;
+              changed=true;
+            }
+          }catch(_){}
+        }
+      }
+      if(changed){
+        try{localStorage.setItem("care-equipment-category-icons",JSON.stringify(window.categoryIcons))}catch(_){}
+        if(typeof saveCategoryIconsEverywhere==="function")saveCategoryIconsEverywhere();
+        if(typeof renderCategoryCards==="function")renderCategoryCards();
+        if(typeof renderAdminCategoryCards==="function")renderAdminCategoryCards();
+        if(typeof renderCategoryIconAdmin==="function")renderCategoryIconAdmin();
+        if(showMessage&&typeof toast==="function")toast("既存の品目アイコンを軽量化しました");
+      }
+      return changed;
+    }
+    function buildFastIconAdmin(){
+      const container=document.querySelector("#categoryIconAdmin");
+      if(!container||!window.categories||!window.categoryIcons)return false;
+      container.replaceChildren();
+      window.categories.forEach(category=>{
+        const row=document.createElement("div");
+        row.className="category-icon-row";
+        row.innerHTML='<div class="category-icon-preview"></div><strong></strong><label class="ghost"><span>画像を選択</span><input type="file" accept="image/*" hidden></label><button class="ghost" type="button">削除</button><small></small>';
+        row.querySelector("strong").textContent=category;
+        const preview=row.querySelector(".category-icon-preview");
+        preview.innerHTML=typeof categoryIconMarkup==="function"?categoryIconMarkup(category):(window.categoryIcons[category]?'<img src="'+window.categoryIcons[category]+'" alt="" loading="lazy" decoding="async">':"");
+        const small=row.querySelector("small");
+        const size=iconDataSize(window.categoryIcons[category]);
+        small.textContent=size?("軽量アイコン: 約"+Math.max(1,Math.round(size/1024))+"KB"):"未登録";
+        const input=row.querySelector("input");
+        input.addEventListener("change",async()=>{
+          const file=input.files?.[0];
+          if(!file)return;
+          try{
+            small.textContent="軽量化しています...";
+            const optimized=await compressIconFile(file);
+            window.categoryIcons[category]=optimized;
+            await saveCategoryIconsEverywhere();
+            if(typeof renderCategoryCards==="function")renderCategoryCards();
+            if(typeof renderAdminCategoryCards==="function")renderAdminCategoryCards();
+            buildFastIconAdmin();
+            if(typeof toast==="function")toast("品目アイコンを軽量化して保存しました");
+          }catch(error){
+            small.textContent=error.message||"保存できませんでした";
+            if(typeof toast==="function")toast(error.message||"アイコンを保存できませんでした");
+          }finally{
+            input.value="";
+          }
+        });
+        row.querySelector("button").addEventListener("click",async()=>{
+          delete window.categoryIcons[category];
+          await saveCategoryIconsEverywhere();
+          if(typeof renderCategoryCards==="function")renderCategoryCards();
+          if(typeof renderAdminCategoryCards==="function")renderAdminCategoryCards();
+          buildFastIconAdmin();
+          if(typeof toast==="function")toast("品目アイコンを削除しました");
+        });
+        container.append(row);
+      });
+      return true;
+    }
+    function enhanceIconMarkup(){
+      const original=window.categoryIconMarkup||categoryIconMarkup;
+      window.categoryIconMarkup=function(category){
+        const src=window.categoryIcons?.[category];
+        if(src)return '<img src="'+src+'" alt="" loading="lazy" decoding="async" width="88" height="88">';
+        return original(category);
+      };
+      try{categoryIconMarkup=window.categoryIconMarkup}catch(_){}
+    }
+    function installFastCategoryIcons(){
+      window.categoryIcons=window.categoryIcons||categoryIcons;
+      window.categories=window.categories||categories;
+      enhanceIconMarkup();
+      window.compressCategoryIconFile=compressIconFile;
+      window.optimizeLargeStoredIcons=optimizeLargeStoredIcons;
+      window.renderCategoryIconAdmin=buildFastIconAdmin;
+      try{renderCategoryIconAdmin=buildFastIconAdmin}catch(_){}
+      buildFastIconAdmin();
+      setTimeout(()=>optimizeLargeStoredIcons(false),600);
+    }
+    if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",installFastCategoryIcons);
+    else installFastCategoryIcons();
+  })();
+  </script>
+  <script>
+  (function(){
+    const STORAGE_KEY="care-equipment-category-icons";
+    const CATEGORY_NAMES=["特殊寝台","特殊寝台付属品","床ずれ防止用具","車いす","車いす付属品","電動カート","電動車いす","手すり","歩行器","歩行補助つえ","スロープ","体位変換器","認知症老人徘徊感知機器","移動用リフト"];
+    const ICON_SIZE=160;
+    const ICON_QUALITY=.78;
+    const LARGE_ICON_LENGTH=90000;
+    function readIcons(){
+      try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||{}}catch(_){return {}}
+    }
+    function writeIcons(icons){
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(icons||{}));
+      try{
+        if(typeof categoryIcons==="object"&&categoryIcons){
+          Object.keys(categoryIcons).forEach(key=>delete categoryIcons[key]);
+          Object.assign(categoryIcons,icons||{});
+        }
+        if(typeof saveCategoryIconsEverywhere==="function")saveCategoryIconsEverywhere();
+      }catch(_){}
+    }
+    function iconKb(src){
+      return src&&src.startsWith("data:image/")?Math.max(1,Math.round(src.length/1024)):0;
+    }
+    function imageFromData(src){
+      return new Promise((resolve,reject)=>{
+        const img=new Image();
+        img.onload=()=>resolve(img);
+        img.onerror=()=>reject(new Error("画像を読み込めませんでした"));
+        img.src=src;
+      });
+    }
+    async function compressIconData(src){
+      const img=await imageFromData(src);
+      const canvas=document.createElement("canvas");
+      canvas.width=ICON_SIZE;
+      canvas.height=ICON_SIZE;
+      const ctx=canvas.getContext("2d");
+      ctx.fillStyle="#fff";
+      ctx.fillRect(0,0,ICON_SIZE,ICON_SIZE);
+      const scale=Math.min(ICON_SIZE/img.width,ICON_SIZE/img.height);
+      const w=Math.max(1,Math.round(img.width*scale));
+      const h=Math.max(1,Math.round(img.height*scale));
+      ctx.imageSmoothingEnabled=true;
+      ctx.imageSmoothingQuality="high";
+      ctx.drawImage(img,Math.round((ICON_SIZE-w)/2),Math.round((ICON_SIZE-h)/2),w,h);
+      const webp=canvas.toDataURL("image/webp",ICON_QUALITY);
+      return webp&&webp.length<src.length?webp:canvas.toDataURL("image/jpeg",ICON_QUALITY);
+    }
+    async function compressFile(file){
+      if(!file||!file.type.startsWith("image/"))throw new Error("画像ファイルを選択してください");
+      const src=await new Promise((resolve,reject)=>{
+        const reader=new FileReader();
+        reader.onload=()=>resolve(String(reader.result||""));
+        reader.onerror=()=>reject(new Error("画像を読み込めませんでした"));
+        reader.readAsDataURL(file);
+      });
+      return compressIconData(src);
+    }
+    function updateVisibleCategoryIcon(category,src){
+      document.querySelectorAll("#categoryCards .category-card").forEach(card=>{
+        const name=card.querySelector("strong")?.textContent?.trim();
+        if(name!==category)return;
+        const icon=card.querySelector(".category-icon");
+        if(!icon)return;
+        if(src){
+          icon.innerHTML='<img src="'+src+'" alt="" loading="lazy" decoding="async" width="88" height="88">';
+        }
+      });
+    }
+    async function optimizeStoredIcons(){
+      const icons=readIcons();
+      let changed=false;
+      for(const category of Object.keys(icons)){
+        const src=icons[category];
+        if(src&&src.startsWith("data:image/")&&src.length>LARGE_ICON_LENGTH){
+          try{
+            const optimized=await compressIconData(src);
+            if(optimized&&optimized.length<src.length){
+              icons[category]=optimized;
+              changed=true;
+              updateVisibleCategoryIcon(category,optimized);
+            }
+          }catch(_){}
+        }
+      }
+      if(changed){
+        writeIcons(icons);
+        if(!sessionStorage.getItem("care-equipment-icons-optimized")){
+          sessionStorage.setItem("care-equipment-icons-optimized","1");
+          setTimeout(()=>location.reload(),300);
+        }
+      }
+      return changed;
+    }
+    function renderFastIconAdmin(){
+      const container=document.querySelector("#categoryIconAdmin");
+      if(!container)return;
+      const icons=readIcons();
+      container.replaceChildren();
+      CATEGORY_NAMES.forEach(category=>{
+        const row=document.createElement("div");
+        row.className="category-icon-row";
+        row.innerHTML='<div class="category-icon-preview"></div><strong></strong><label class="ghost"><span>画像を選択</span><input type="file" accept="image/*" hidden></label><button class="ghost" type="button">削除</button><small></small>';
+        row.querySelector("strong").textContent=category;
+        const preview=row.querySelector(".category-icon-preview");
+        const src=icons[category];
+        preview.innerHTML=src?'<img src="'+src+'" alt="" loading="lazy" decoding="async" width="88" height="88">':"";
+        const small=row.querySelector("small");
+        small.textContent=src?("軽量アイコン: 約"+iconKb(src)+"KB"):"未登録";
+        row.querySelector("input").addEventListener("change",async event=>{
+          const file=event.target.files?.[0];
+          if(!file)return;
+          try{
+            small.textContent="軽量化しています...";
+            const optimized=await compressFile(file);
+            const next=readIcons();
+            next[category]=optimized;
+            writeIcons(next);
+            updateVisibleCategoryIcon(category,optimized);
+            renderFastIconAdmin();
+            if(typeof toast==="function")toast("品目アイコンを軽量化して保存しました");
+          }catch(error){
+            small.textContent=error.message||"保存できませんでした";
+            if(typeof toast==="function")toast(error.message||"保存できませんでした");
+          }
+        });
+        row.querySelector("button").addEventListener("click",()=>{
+          const next=readIcons();
+          delete next[category];
+          writeIcons(next);
+          renderFastIconAdmin();
+          if(typeof toast==="function")toast("品目アイコンを削除しました。画面を再読み込みすると標準アイコンに戻ります");
+        });
+        container.append(row);
+      });
+    }
+    function installRobustFastIcons(){
+      window.compressCategoryIconFile=compressFile;
+      window.optimizeLargeStoredIcons=optimizeStoredIcons;
+      window.renderFastIconAdmin=renderFastIconAdmin;
+      renderFastIconAdmin();
+      setTimeout(optimizeStoredIcons,700);
+    }
+    if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",installRobustFastIcons);
+    else installRobustFastIcons();
+  })();
+  </script>
 </body>
 </html>
 
