@@ -1248,17 +1248,22 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
       const placeEntrance=includesAny(text,["玄関","上がり框","上り框","あがりかまち","框"]);
       const placeHall=includesAny(text,["廊下","階段","室内","居室"]);
       const painOrInstability=includesAny(text,["痛み","疼痛","ふらつき","不安","転倒","つまずき","立ち上がり","歩行","足"]);
+      const wantsWheelchair=includesAny(text,["車いす","車椅子"]);
+      const wantsSlope=includesAny(text,["スロープ","段差解消"]);
       if(wantsHandrail&&placeToilet){
-        add("トイレ用手すり","手すり希望があり、排泄場所での立ち座りや方向転換に不安が想定されます。便器位置、壁からの距離、立ち上がり方向を確認して候補にします。");
+        add("トイレ用手すり","排泄場所での立ち座りや方向転換を安全に行えるよう、便器位置、壁からの距離、立ち上がる方向を確認して候補にします。");
       }
       if(wantsHandrail&&placeBath){
-        add("浴室手すり・入浴補助用具","浴室での手すり希望がある場合、浴槽またぎ、洗い場での立ち座り、濡れた床でのふらつきを確認し、手すり位置と購入品を併せて検討します。");
+        add("浴室手すり・入浴補助用具","浴槽またぎ、洗い場での立ち座り、濡れた床でのふらつきを確認し、手すり位置と入浴補助用具を併せて検討します。");
       }
       if(wantsHandrail&&placeEntrance){
-        add("玄関用手すり","玄関や上がり框で手すり希望があるため、昇降時にどちらの足へ痛みや不安が出るか、靴の着脱姿勢、設置できる壁や床の強度を確認します。");
+        add("玄関用手すり","玄関や上がり框での昇降時に、どちらの足へ痛みや不安が出るか、靴の着脱姿勢、設置できる壁や床の強度を確認します。");
       }
-      if(wantsHandrail&&(placeHall||(!placeToilet&&!placeBath&&!placeEntrance))){
-        add("屋内用手すり","手すり希望が明確なため、歩行導線、立ち上がり位置、方向転換場所を確認し、置き型手すり・突っ張り型・住宅改修の手すりを比較します。");
+      if(wantsHandrail&&placeHall){
+        add("廊下手すり","廊下や室内の歩行導線、方向転換場所、連続して支えが必要な範囲を確認し、置き型手すり・突っ張り型・住宅改修の手すりを比較します。");
+      }
+      if(wantsHandrail&&!placeToilet&&!placeBath&&!placeEntrance&&!placeHall){
+        add("屋内用手すり","立ち上がり位置や室内の移動導線を確認し、置き型手すり・突っ張り型・住宅改修の手すりを比較します。");
       }
       if(includesAny(text,["歩行","ふらつき","転倒","外出","屋外","買い物","長距離","疲れ"])&&!wantsHandrail){
         add("歩行器・シルバーカー","歩行時のふらつきや転倒リスク、屋外移動時の疲労軽減が課題として考えられるため、身体状況と使用場所を確認した上で候補にします。");
@@ -1275,7 +1280,7 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
       if(placeBath&&!wantsHandrail){
         add("入浴補助用具・浴室手すり","浴槽またぎ、洗い場での立ち座り、濡れた床での転倒リスクに対して、購入品や住宅改修も含めて確認します。");
       }
-      if(includesAny(text,["段差","上がり框","上り框","スロープ","車いすで入れない"])&&!wantsHandrail){
+      if((includesAny(text,["段差","上がり框","上り框","車いすで入れない"])&&!wantsHandrail)||wantsSlope||(wantsWheelchair&&includesAny(text,["段差","玄関","屋外","出入り"]))){
         add("スロープ","車いすや歩行器で段差通過が必要な場合、段差高、勾配、介助者の有無を確認して候補にします。");
       }
       if(includesAny(text,["移乗","乗り移り","ベッドから車いす","介助が重い"])){
@@ -1286,16 +1291,17 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
       }
       const issues=[];
       if(home)issues.push("住環境: "+home);
-      if(wantsHandrail)issues.push("手すり希望があるため、設置場所、利き手、動作方向、壁や床の強度、レンタル用具と住宅改修のどちらが適切か確認が必要です。");
+      if(wantsHandrail)issues.push("手すりを使用したい場所ごとに、利き手、動作方向、壁や床の強度、レンタル用具と住宅改修のどちらが適切か確認が必要です。");
       if(placeEntrance||includesAny(text,["段差","廊下","階段"]))issues.push("移動経路や段差で、足の痛み・ふらつき・つまずきが出る場面を確認してください。");
       if(placeToilet||placeBath||includesAny(text,["ベッド"]))issues.push("使用場所ごとの立ち座り、方向転換、手を伸ばす位置を実際の動作で確認が必要です。");
       if(painOrInstability)issues.push("痛みの部位、荷重時の不安定さ、介助者の有無を確認し、用具だけでなく動線調整も検討します。");
       if(!issues.length)issues.push("訪問時に本人の動作能力、介助者の有無、設置スペースを確認してください。");
       return {
-        summary: input ? "相談内容から、希望している用具名だけでなく、痛み・ふらつき・使用場所・生活動作を分けて確認し、福祉用具の候補を整理しました。" : "住環境の情報をもとに、転倒予防と生活動作の安定を目的として候補を整理しました。",
+        original_input: input,
+        summary: input ? "相談内容をもとに、希望する用具、痛みやふらつき、使用場所、生活動作を分けて確認し、候補となる福祉用具を整理しました。" : "住環境の情報をもとに、転倒予防と生活動作の安定を目的として候補を整理しました。",
         home_issues: issues.slice(0,5),
         candidates: candidates.slice(0,5),
-        handoff_note: "訪問時は、本人の立ち上がり、歩行、移乗、排泄、入浴動作を実際に確認し、希望用具を尊重しながら、設置可否・安全性・介助量軽減につながるかを専門相談員として判断してください。"
+        handoff_note: "訪問時は、本人の立ち上がり、歩行、移乗、排泄、入浴動作を実際に確認し、希望用具を踏まえて、設置可否・安全性・介助量軽減につながるかを専門相談員として判断してください。"
       };
     }
     async function stableRunAiTriage(){
@@ -1317,6 +1323,7 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
         try{data=await res.json()}catch(_){}
         if(!res.ok||data.ok===false)throw new Error(data.error||data.detail||"AI整理に失敗しました");
         const result=data.result||data;
+        result.original_input=input;
         renderAiTriageResult(result);
         if(status)status.textContent="整理できました。";
         if(typeof toast==="function")toast("AI相談内容を整理しました");
@@ -1350,6 +1357,184 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
     },true);
     document.addEventListener('keydown',event=>{if(event.key==='Escape')setTimeout(sync,0)},true);
     sync();
+  })();
+  </script>
+  <script>
+  (function(){
+    function currentAiInput(){
+      return String(document.querySelector('#aiTroubleInput')?.value||'').trim();
+    }
+    function aiResultTextOnly(result){
+      const r=result||{};
+      const lines=["【AIらくらく選定 整理結果】",""];
+      const original=String(r.original_input||currentAiInput()).trim();
+      if(original)lines.push("■お困りごと（原文）",original,"");
+      if(r.summary)lines.push("■相談内容の要点",r.summary,"");
+      if(Array.isArray(r.home_issues)&&r.home_issues.length){
+        lines.push("■住環境・動作上の確認点");
+        r.home_issues.forEach(issue=>lines.push("・"+issue));
+        lines.push("");
+      }
+      if(Array.isArray(r.candidates)&&r.candidates.length){
+        lines.push("■おすすめ候補");
+        r.candidates.forEach(candidate=>{
+          lines.push("・"+(candidate.item||"候補"));
+          if(candidate.reason)lines.push("  理由: "+candidate.reason);
+        });
+        lines.push("");
+      }
+      if(r.handoff_note)lines.push("■専門相談員への申し送り",r.handoff_note);
+      return lines.join("\n");
+    }
+    function drawWrapped(ctx,text,x,y,maxWidth,lineHeight,font){
+      ctx.font=font;
+      String(text||"").split("\n").forEach(part=>{
+        let line="";
+        for(const ch of part){
+          const test=line+ch;
+          if(ctx.measureText(test).width>maxWidth&&line){
+            ctx.fillText(line,x,y);
+            y+=lineHeight;
+            line=ch;
+          }else{
+            line=test;
+          }
+        }
+        ctx.fillText(line,x,y);
+        y+=lineHeight;
+      });
+      return y;
+    }
+    function makeAiTriageCanvas(){
+      if(!window.aiTriageSummary){toast("先にAIで整理してください");return null}
+      const canvas=document.createElement("canvas");
+      canvas.width=1240;
+      canvas.height=4200;
+      const ctx=canvas.getContext("2d");
+      ctx.fillStyle="#fffef8";
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      const today=new Date().toLocaleDateString("ja-JP");
+      ctx.fillStyle="#24352d";
+      ctx.font="700 34px 'Yu Gothic', sans-serif";
+      ctx.fillText("AIらくらく選定 整理結果",70,86);
+      ctx.font="22px 'Yu Gothic', sans-serif";
+      ctx.fillText("作成日 "+today,930,82);
+      ctx.strokeStyle="#6fbd7b";
+      ctx.lineWidth=6;
+      ctx.beginPath();
+      ctx.moveTo(70,124);
+      ctx.lineTo(1170,124);
+      ctx.stroke();
+      let y=178;
+      aiResultTextOnly(window.aiTriageSummary).split("\n\n").forEach(block=>{
+        const parts=block.split("\n");
+        const title=parts.shift()||"";
+        if(title){
+          ctx.fillStyle="#1f3a2e";
+          ctx.font="700 26px 'Yu Gothic', sans-serif";
+          ctx.fillText(title,70,y);
+          y+=34;
+        }
+        ctx.fillStyle="#24352d";
+        y=drawWrapped(ctx,parts.join("\n"),94,y,1040,31,"21px 'Yu Gothic', sans-serif")+20;
+      });
+      const finalHeight=Math.max(1754,Math.min(canvas.height,y+70));
+      const out=document.createElement("canvas");
+      out.width=canvas.width;
+      out.height=finalHeight;
+      out.getContext("2d").drawImage(canvas,0,0,canvas.width,finalHeight,0,0,canvas.width,finalHeight);
+      return out;
+    }
+    function saveAiTriagePdf(){
+      const canvas=makeAiTriageCanvas();
+      if(!canvas)return;
+      const blob=pdfFromCanvas(canvas);
+      downloadBlob(blob,"AIらくらく選定_整理結果.pdf");
+      toast("AI整理結果のPDFを保存します");
+    }
+    function enhancedRenderAiTriageResult(result){
+      window.aiTriageSummary=result||{};
+      const box=document.querySelector('#aiTriageResult');
+      if(!box)return;
+      const r=window.aiTriageSummary;
+      if(!r.original_input)r.original_input=currentAiInput();
+      box.hidden=false;
+      box.innerHTML="<h3>AI整理結果</h3>";
+      const addSection=(title,text)=>{
+        if(!text)return;
+        const sec=document.createElement("section");
+        sec.className="ai-candidate";
+        const strong=document.createElement("strong");
+        strong.textContent=title;
+        const p=document.createElement("p");
+        p.textContent=text;
+        sec.append(strong,p);
+        box.append(sec);
+      };
+      addSection("お困りごと（原文）",r.original_input);
+      addSection("相談内容の要点",r.summary);
+      if(Array.isArray(r.home_issues)&&r.home_issues.length){
+        const sec=document.createElement("section");
+        sec.className="ai-candidate";
+        const strong=document.createElement("strong");
+        strong.textContent="住環境・動作上の確認点";
+        const ul=document.createElement("ul");
+        r.home_issues.forEach(issue=>{
+          const li=document.createElement("li");
+          li.textContent=issue;
+          ul.append(li);
+        });
+        sec.append(strong,ul);
+        box.append(sec);
+      }
+      if(Array.isArray(r.candidates)&&r.candidates.length){
+        const sec=document.createElement("section");
+        sec.innerHTML="<h3>おすすめ候補</h3>";
+        r.candidates.forEach(candidate=>{
+          const div=document.createElement("div");
+          div.className="ai-candidate";
+          const strong=document.createElement("strong");
+          strong.textContent=candidate.item||"候補";
+          const p=document.createElement("p");
+          p.textContent=candidate.reason||"";
+          div.append(strong,p);
+          sec.append(div);
+        });
+        box.append(sec);
+      }
+      addSection("専門相談員への申し送り",r.handoff_note);
+      const actions=document.createElement("div");
+      actions.className="ai-result-actions";
+      const copy=document.createElement("button");
+      copy.className="line-copy";
+      copy.type="button";
+      copy.textContent="整理結果をコピー";
+      copy.addEventListener("click",async()=>{
+        const text=aiResultTextOnly(window.aiTriageSummary);
+        try{await navigator.clipboard.writeText(text)}catch(_){
+          const area=document.createElement("textarea");
+          area.value=text;
+          document.body.append(area);
+          area.select();
+          document.execCommand("copy");
+          area.remove();
+        }
+        toast("AI整理結果をコピーしました");
+      });
+      const pdf=document.createElement("button");
+      pdf.className="line-open";
+      pdf.type="button";
+      pdf.textContent="PDFで保存";
+      pdf.addEventListener("click",saveAiTriagePdf);
+      actions.append(copy,pdf);
+      box.append(actions);
+      box.scrollIntoView({behavior:"smooth",block:"start"});
+    }
+    window.aiTriageResultText=aiResultTextOnly;
+    window.makeAiTriageCanvas=makeAiTriageCanvas;
+    window.saveAiTriagePdf=saveAiTriagePdf;
+    window.renderAiTriageResult=enhancedRenderAiTriageResult;
+    try{aiTriageResultText=aiResultTextOnly;renderAiTriageResult=enhancedRenderAiTriageResult}catch(_){}
   })();
   </script>
 </body>
