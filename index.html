@@ -1286,7 +1286,10 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
       if(button)button.disabled=true;
       if(status)status.textContent="AIが相談内容を整理しています...";
       try{
-        const res=await fetch("/api/triage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({input,home})});
+        const controller=new AbortController();
+        const timeoutId=setTimeout(()=>controller.abort(),12000);
+        const res=await fetch("/api/triage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({input,home}),signal:controller.signal});
+        clearTimeout(timeoutId);
         let data={};
         try{data=await res.json()}catch(_){}
         if(!res.ok||data.ok===false)throw new Error(data.error||data.detail||"AI整理に失敗しました");
