@@ -1224,6 +1224,94 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
   })();
   </script>
   <script>
+  /* Final AI triage stability guard */
+  (function(){
+    function textValue(selector){
+      return String(document.querySelector(selector)?.value||"").trim();
+    }
+    function includesAny(text,words){
+      return words.some(word=>text.includes(word));
+    }
+    function fallbackTriage(input,home){
+      const text=(input+" "+home).trim();
+      const candidates=[];
+      const add=(item,reason)=>{
+        if(!candidates.some(candidate=>candidate.item===item))candidates.push({item,reason});
+      };
+      if(includesAny(text,["歩行","ふらつき","転倒","外出","屋外","買い物","長距離","疲れ"])){
+        add("歩行器・シルバーカー","歩行時のふらつきや転倒リスク、屋外移動時の疲労軽減が課題として考えられるため、身体状況と使用場所を確認した上で候補にします。");
+      }
+      if(includesAny(text,["車いす","車椅子","長く歩けない","移動距離","通院"])){
+        add("車いす","長距離移動や通院、外出時の移動負担が大きい場合に、介助量軽減と安全な移動手段として確認します。");
+      }
+      if(includesAny(text,["ベッド","起き上がり","寝起き","立ち上がり","寝返り"])){
+        add("特殊寝台・特殊寝台付属品","起き上がり、端座位保持、立ち上がり動作に負担がある場合、ベッド高さ調整や背上げ機能の必要性を確認します。");
+      }
+      if(includesAny(text,["トイレ","排泄","便座","立てない"])){
+        add("トイレ用手すり","排泄時の立ち座りや方向転換で不安定さがある場合、設置場所と動作導線を確認した上で候補にします。");
+      }
+      if(includesAny(text,["浴室","入浴","風呂","浴槽","またぎ"])){
+        add("入浴補助用具・浴室手すり","浴槽またぎ、洗い場での立ち座り、濡れた床での転倒リスクに対して、購入品や住宅改修も含めて確認します。");
+      }
+      if(includesAny(text,["段差","玄関","上がり框","スロープ","車いすで入れない"])){
+        add("スロープ","玄関や屋外の段差が移動の妨げになっている場合、段差高、勾配、介助者の有無を確認して候補にします。");
+      }
+      if(includesAny(text,["移乗","乗り移り","ベッドから車いす","介助が重い"])){
+        add("移乗用具・移動用リフト","移乗時の転倒リスクや介助負担が大きい場合、本人の残存能力と介助環境を確認して候補にします。");
+      }
+      if(!candidates.length){
+        add("歩行器・手すり等の安全確保用具","相談内容から生活動作の不安定さが想定されるため、訪問時に移動、立ち座り、排泄、入浴の各動作を確認して候補を絞ります。");
+      }
+      const issues=[];
+      if(home)issues.push("住環境: "+home);
+      if(includesAny(text,["段差","玄関","廊下","階段"]))issues.push("移動経路や段差で転倒リスクがないか確認が必要です。");
+      if(includesAny(text,["トイレ","浴室","ベッド"]))issues.push("使用場所ごとの立ち座り、方向転換、手すり位置の確認が必要です。");
+      if(!issues.length)issues.push("訪問時に本人の動作能力、介助者の有無、設置スペースを確認してください。");
+      return {
+        summary: input ? "相談内容から、日常生活動作の安全確保と介助量軽減を目的に福祉用具の候補整理が必要です。入力内容をもとに、訪問時に確認すべき点と候補用具を整理しました。" : "住環境の情報をもとに、転倒予防と生活動作の安定を目的として候補を整理しました。",
+        home_issues: issues.slice(0,4),
+        candidates: candidates.slice(0,5),
+        handoff_note: "訪問時は、本人の立ち上がり、歩行、移乗、排泄、入浴動作を実際に確認し、既に使用中の用具や設置スペース、介助者の有無を確認してください。"
+      };
+    }
+    async function stableRunAiTriage(){
+      const input=textValue("#aiTroubleInput");
+      const home=textValue("#aiHomeInput");
+      const button=document.querySelector("#runAiTriage");
+      const status=document.querySelector("#aiTriageStatus");
+      if(!input&&!home){
+        if(typeof toast==="function")toast("相談内容を入力してください");
+        return;
+      }
+      if(button)button.disabled=true;
+      if(status)status.textContent="AIが相談内容を整理しています...";
+      try{
+        const res=await fetch("/api/triage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({input,home})});
+        let data={};
+        try{data=await res.json()}catch(_){}
+        if(!res.ok||data.ok===false)throw new Error(data.error||data.detail||"AI整理に失敗しました");
+        const result=data.result||data;
+        renderAiTriageResult(result);
+        if(status)status.textContent="整理できました。";
+        if(typeof toast==="function")toast("AI相談内容を整理しました");
+      }catch(error){
+        const result=fallbackTriage(input,home);
+        renderAiTriageResult(result);
+        if(status)status.textContent="通信が不安定なため、入力内容から整理しました。";
+        if(typeof toast==="function")toast("入力内容から整理結果を作成しました");
+      }finally{
+        if(button)button.disabled=false;
+      }
+    }
+    document.addEventListener("click",event=>{
+      if(!event.target.closest("#runAiTriage"))return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      stableRunAiTriage();
+    },true);
+  })();
+  </script>
+  <script>
   (function(){
     const modal=document.querySelector('#adminLoginModal');
     if(!modal)return;
