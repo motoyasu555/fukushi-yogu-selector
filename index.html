@@ -55,10 +55,13 @@ window.handleSave=window.handleSave||async function(event){
   const name=elements.nameInput.value.trim();
   const category=elements.categoryInput.value;
   if(!name||!category){toast("商品名と品目を入力してください");return}
+  const priceValue=priceNumber(elements.priceInput.value);
+  if(!priceValue){toast("月額単位数を半角数字で入力してください");return}
   const id=elements.productId.value||crypto.randomUUID();
   const existing=products.find(product=>product.id===id);
   const featureSet=new Set(currentFeatureTags);
-  (elements.featuresInput.value||"").split(/[、,\n]/).map(item=>item.trim()).filter(Boolean).forEach(item=>featureSet.add(item));
+  (elements.featuresInput.value||"").split(/[?,
+]/).map(item=>item.trim()).filter(Boolean).forEach(item=>featureSet.add(item));
   let photos=productPhotos(existing);
   const selectedPhotoFiles=[...elements.photoInputs].map(input=>input.files&&input.files[0]).filter(Boolean).slice(0,3);
   if(selectedPhotoFiles.length){
@@ -85,7 +88,7 @@ window.handleSave=window.handleSave||async function(event){
     features:[...featureSet],
     description:elements.descriptionInput.value.trim(),
     spec:elements.specInput.value.trim(),
-    price:elements.priceInput.value.trim(),
+    price:String(priceValue),
     score:Math.max(1,Math.min(5,Number(elements.scoreInput.value)||3)),
     photo:photos[0]||"",
     photos
@@ -93,20 +96,22 @@ window.handleSave=window.handleSave||async function(event){
   const index=products.findIndex(item=>item.id===id);
   if(index>=0)products[index]=product;else products.push(product);
   saveProducts();
-  try{await saveProductsEverywhere?.()}catch(error){console.warn(error)}
+  let sharedSaved=true;
+  try{await saveProductsEverywhere?.()}catch(error){sharedSaved=false;console.warn(error)}
+  adminCategoryFilter=product.category;
   renderMakerOptions?.();
   renderFeatureFilters?.(false);
   renderProducts?.();
   renderAdmin?.();
   renderCart?.();
   clearForm?.();
-  toast("商品を保存しました");
+  toast(sharedSaved?"商品を保存しました":"商品は保存しました。共有保存のみ確認してください");
 };
 window.handleDelete=window.handleDelete||function(){
   const id=elements.productId.value;
-  if(!id){toast("削除する商品を一覧から選んでください");return}
+  if(!id){toast("削除する商品を登録済み一覧から選んでください");return}
   products=products.filter(product=>product.id!==id);
-  cart=cart.filter(item=>item!==id);
+  cart=cart.filter(item=>String(typeof cartEntryProductId==="function"?cartEntryProductId(item):item)!==id);
   saveProducts();
   saveCart?.();
   saveProductsEverywhere?.().catch?.(error=>console.warn(error));
@@ -1990,6 +1995,8 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
 
 </body>
 </html>
+
+
 
 
 
