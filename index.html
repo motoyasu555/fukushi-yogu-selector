@@ -2522,6 +2522,110 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
   [200,800,1600,3000].forEach(delay=>setTimeout(bind,delay));
 })();
 </script>
+<script>
+/* Final admin login fix: keep the bottom admin button responsive. */
+(function(){
+  const ADMIN_PASSWORD="wellactive1234";
+
+  function setView(viewName){
+    const target=document.querySelector("#"+viewName+"View");
+    if(!target)return false;
+    document.body.classList.remove("ai-consult-active");
+    document.querySelectorAll(".view").forEach(view=>view.classList.remove("active"));
+    target.classList.add("active");
+    document.querySelectorAll(".tab").forEach(tab=>tab.classList.toggle("active",tab.dataset.view===viewName));
+    return true;
+  }
+
+  function openAdmin(event){
+    if(event){
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+    }
+    const modal=document.querySelector("#adminLoginModal");
+    if(!modal)return;
+    modal.classList.add("show","active");
+    modal.setAttribute("aria-hidden","false");
+    modal.removeAttribute("hidden");
+    modal.style.display="flex";
+    document.body.classList.add("admin-login-open");
+    const error=document.querySelector("#adminLoginError");
+    if(error)error.textContent="";
+    requestAnimationFrame(()=>document.querySelector("#adminPassword")?.focus());
+  }
+
+  function closeAdmin(event){
+    if(event){
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+    }
+    const modal=document.querySelector("#adminLoginModal");
+    if(!modal)return;
+    modal.classList.remove("show","active");
+    modal.setAttribute("aria-hidden","true");
+    modal.style.display="";
+    document.body.classList.remove("admin-login-open");
+  }
+
+  function submitAdmin(event){
+    if(event){
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+    }
+    const password=document.querySelector("#adminPassword")?.value||"";
+    const error=document.querySelector("#adminLoginError");
+    if(password!==ADMIN_PASSWORD){
+      if(error)error.textContent="パスワードが違います。";
+      return;
+    }
+    closeAdmin();
+    if(typeof window.switchView==="function"){
+      try{window.switchView("admin")}catch(_){setView("admin")}
+    }else{
+      setView("admin");
+    }
+    requestAnimationFrame(()=>document.querySelector("#adminView")?.scrollIntoView({behavior:"smooth",block:"start"}));
+  }
+
+  function bindButton(selector,handler){
+    document.querySelectorAll(selector).forEach(button=>{
+      if(button.dataset.finalAdminBound==="true")return;
+      button.dataset.finalAdminBound="true";
+      button.addEventListener("click",handler,true);
+      button.addEventListener("touchend",handler,{capture:true,passive:false});
+    });
+  }
+
+  function bind(){
+    bindButton("#adminLogin,#bottomAdmin",openAdmin);
+    bindButton("#closeAdminLogin",closeAdmin);
+    const form=document.querySelector("#adminLoginForm");
+    if(form&&form.dataset.finalAdminSubmitBound!=="true"){
+      form.dataset.finalAdminSubmitBound="true";
+      form.addEventListener("submit",submitAdmin,true);
+    }
+    const modal=document.querySelector("#adminLoginModal");
+    if(modal&&modal.dataset.finalAdminBackdropBound!=="true"){
+      modal.dataset.finalAdminBackdropBound="true";
+      modal.addEventListener("click",event=>{if(event.target===modal)closeAdmin(event)},true);
+    }
+  }
+
+  document.addEventListener("click",event=>{
+    if(event.target.closest("#adminLogin,#bottomAdmin"))return openAdmin(event);
+    if(event.target.closest("#closeAdminLogin"))return closeAdmin(event);
+  },true);
+  document.addEventListener("keydown",event=>{
+    if(event.key==="Escape"&&document.querySelector("#adminLoginModal")?.classList.contains("show"))closeAdmin(event);
+  },true);
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",bind);
+  else bind();
+  [200,800,1600,3000].forEach(delay=>setTimeout(bind,delay));
+})();
+</script>
 </body>
 </html>
 
