@@ -644,7 +644,7 @@ img[alt*="AI????"],img[alt*="AI????"]{display:block!important;width:100%!importa
 /* End transparent official logo and larger category icons */
 
 /* Final mobile top action stability */
-.top-actions button,.top-actions a{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.top-actions,.top-actions button,.top-actions a{touch-action:pan-y;-webkit-tap-highlight-color:transparent}
 @media(max-width:760px){
   .top-actions{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;width:100%!important;overflow:visible!important}
   .top-actions .tabs{grid-column:1!important;width:100%!important;min-width:0!important;display:flex!important;flex-direction:column!important;gap:10px!important}
@@ -840,7 +840,14 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
     const top=document.querySelector(".top-actions");
     if(!top||top.dataset.swipeGuardBound==="true")return;
     top.dataset.swipeGuardBound="true";
-    let startX=0,startY=0,moved=false;
+    let startX=0,startY=0,moved=false,blockClickUntil=0;
+    const isAction=event=>event.target.closest(".top-actions button,.top-actions a");
+    const markMove=touch=>{
+      if(!touch)return;
+      const dx=Math.abs(touch.clientX-startX);
+      const dy=Math.abs(touch.clientY-startY);
+      if(dx>6||dy>6)moved=true;
+    };
     top.addEventListener("touchstart",event=>{
       const touch=event.touches&&event.touches[0];
       if(!touch)return;
@@ -850,13 +857,19 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
     },{passive:true});
     top.addEventListener("touchmove",event=>{
       const touch=event.touches&&event.touches[0];
-      if(!touch)return;
-      if(Math.abs(touch.clientX-startX)>10||Math.abs(touch.clientY-startY)>10)moved=true;
+      markMove(touch);
     },{passive:true});
+    top.addEventListener("touchend",event=>{
+      markMove(event.changedTouches&&event.changedTouches[0]);
+      if(!moved||!isAction(event))return;
+      blockClickUntil=Date.now()+700;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      moved=false;
+    },{capture:true,passive:false});
     top.addEventListener("click",event=>{
-      if(!moved)return;
-      const target=event.target.closest("button,a");
-      if(!target)return;
+      if(!moved&&Date.now()>blockClickUntil)return;
+      if(!isAction(event))return;
       event.preventDefault();
       event.stopImmediatePropagation();
       moved=false;
