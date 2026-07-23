@@ -122,6 +122,31 @@ export default async function handler(req, res) {
       result = JSON.parse(match[0]);
     }
 
+    const limitText = value => {
+      const text = String(value || "").replace(/\s+/g, " ").trim();
+      return text.length > 100 ? text.slice(0, 99) + "…" : text;
+    };
+    ["user_status", "care_status", "life_change_goal", "konnan_jokyo"].forEach(key => {
+      if (result && result[key]) result[key] = limitText(result[key]);
+    });
+    if (Array.isArray(result?.konnan_jokyo_by_category)) {
+      result.konnan_jokyo_by_category.forEach(item => {
+        if (item?.text) item.text = limitText(item.text);
+        if (item?.text_short) item.text_short = limitText(item.text_short);
+      });
+    }
+    if (Array.isArray(result?.kaishuu_mokuteki)) {
+      result.kaishuu_mokuteki.forEach(item => {
+        if (item?.houshin) item.houshin = limitText(item.houshin);
+      });
+    }
+    if (Array.isArray(result?.kaishuu_mokuteki_by_category)) {
+      result.kaishuu_mokuteki_by_category.forEach(item => {
+        if (item?.houshin) item.houshin = limitText(item.houshin);
+        if (item?.houshin_short) item.houshin_short = limitText(item.houshin_short);
+      });
+    }
+
     return res.status(200).json({ ok: true, result });
   } catch (error) {
     return res.status(500).json({
@@ -130,3 +155,4 @@ export default async function handler(req, res) {
     });
   }
 }
+
