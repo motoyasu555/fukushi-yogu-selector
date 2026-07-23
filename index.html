@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ja">
 <head>
 <meta charset="utf-8">
@@ -105,6 +105,11 @@ window.handleSave=window.handleSave||async function(event){
   renderAdmin?.();
   renderCart?.();
   clearForm?.();
+  requestAnimationFrame(()=>{
+    window.switchView?.("admin");
+    const target=document.querySelector("#adminTitle")||document.querySelector("#productForm")||document.querySelector("#adminView");
+    target?.scrollIntoView({behavior:"smooth",block:"start"});
+  });
   toast(sharedSaved?"商品を保存しました":"商品は保存しました。共有保存のみ確認してください");
 };
 window.handleDelete=window.handleDelete||function(){
@@ -2626,9 +2631,63 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
   [200,800,1600,3000].forEach(delay=>setTimeout(bind,delay));
 })();
 </script>
+<script>
+/* Keep the product registration + button responsive even if another script changes. */
+(function(){
+  function resetProductForm(event){
+    if(event){
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+    }
+    try{
+      if(typeof window.clearForm==="function"){
+        window.clearForm();
+      }else{
+        const form=document.querySelector("#productForm");
+        form?.reset();
+        const productId=document.querySelector("#productId");
+        if(productId)productId.value="";
+        document.querySelectorAll(".photo-input").forEach(input=>input.value="");
+        const preview=document.querySelector("#photoPreview");
+        if(preview){
+          preview.classList.remove("multi");
+          preview.textContent="写真は未選択です";
+        }
+      }
+    }catch(error){
+      console.warn(error);
+    }
+    if(Array.isArray(window.currentFeatureTags))window.currentFeatureTags.length=0;
+    try{window.renderFeatureTagList?.()}catch(error){}
+    try{window.renderFeatureCandidateList?.()}catch(error){}
+    try{window.renderPhotoPreview?.([])}catch(error){}
+    try{window.updateStarRating?.(4)}catch(error){}
+    try{window.updateAccessoryMakerField?.()}catch(error){}
+    const title=document.querySelector("#adminTitle");
+    requestAnimationFrame(()=>title?.scrollIntoView({behavior:"smooth",block:"start"}));
+    try{window.toast?.("新規登録の入力欄に戻しました")}catch(error){}
+  }
+
+  function bind(){
+    document.querySelectorAll("#clearForm").forEach(button=>{
+      if(button.dataset.finalClearFormBound==="true")return;
+      button.dataset.finalClearFormBound="true";
+      button.addEventListener("click",resetProductForm,true);
+      button.addEventListener("touchend",resetProductForm,{capture:true,passive:false});
+    });
+  }
+
+  document.addEventListener("click",event=>{
+    if(event.target.closest("#clearForm"))resetProductForm(event);
+  },true);
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",bind);
+  else bind();
+  [200,800,1600,3000].forEach(delay=>setTimeout(bind,delay));
+})();
+</script>
 </body>
 </html>
-
 
 
 
