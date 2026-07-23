@@ -2667,79 +2667,100 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
     try{window.updateAccessoryMakerField?.()}catch(error){}
   }
 
+  async function saveProductsSharedSafe(){
+    if(typeof saveProductsToSupabase==="function"){
+      try{await saveProductsToSupabase();return true}
+      catch(error){console.warn(error);notice(error.message||text.savedLocal);return false}
+    }
+    if(typeof saveProductsEverywhere==="function"){
+      try{const result=await saveProductsEverywhere();return result!==false}
+      catch(error){console.warn(error);notice(error.message||text.savedLocal);return false}
+    }
+    return true;
+  }
+
   async function finalSaveProduct(event){
     if(event?.__finalProductSaveHandled)return;
     if(event)event.__finalProductSaveHandled=true;
     stopEvent(event);
-    const name=(document.querySelector("#nameInput")?.value||"").trim();
-    const category=document.querySelector("#categoryInput")?.value||"";
-    const priceInput=document.querySelector("#priceInput");
-    const priceValue=typeof priceNumber==="function"?priceNumber(priceInput?.value):Number(String(priceInput?.value||"").replace(/[^\d]/g,""));
-    if(!name||!category){notice(text.nameCategory);return}
-    if(!priceValue){notice(text.price);return}
+    if(finalSaveProduct.__saving){notice("\u4fdd\u5b58\u4e2d\u3067\u3059\u3002\u5c11\u3057\u304a\u5f85\u3061\u304f\u3060\u3055\u3044");return}
+    finalSaveProduct.__saving=true;
+    const saveButton=document.querySelector("#productForm button[type='submit']");
+    const saveButtonText=saveButton?.textContent;
+    if(saveButton){saveButton.disabled=true;saveButton.textContent="\u4fdd\u5b58\u4e2d..."}
+    try{
+      const name=(document.querySelector("#nameInput")?.value||"").trim();
+      const category=document.querySelector("#categoryInput")?.value||"";
+      const priceInput=document.querySelector("#priceInput");
+      const priceValue=typeof priceNumber==="function"?priceNumber(priceInput?.value):Number(String(priceInput?.value||"").replace(/[^\d]/g,""));
+      if(!name||!category){notice(text.nameCategory);return}
+      if(!priceValue){notice(text.price);return}
 
-    const productId=document.querySelector("#productId");
-    const id=productId?.value||crypto.randomUUID();
-    const existing=products.find(product=>product.id===id);
-    const featureSet=new Set(getFeatureTags());
-    String(document.querySelector("#featuresInput")?.value||"").split(/[\u3001,\n]/).map(v=>v.trim()).filter(Boolean).forEach(v=>featureSet.add(v));
+      const productId=document.querySelector("#productId");
+      const id=productId?.value||crypto.randomUUID();
+      const existing=products.find(product=>product.id===id);
+      const featureSet=new Set(getFeatureTags());
+      String(document.querySelector("#featuresInput")?.value||"").split(/[\u3001,\n]/).map(v=>v.trim()).filter(Boolean).forEach(v=>featureSet.add(v));
 
-    let photos=typeof productPhotos==="function"?productPhotos(existing):((existing?.photos&&existing.photos.length)?existing.photos:(existing?.photo?[existing.photo]:[]));
-    const selectedFiles=[...document.querySelectorAll(".photo-input")].map(input=>input.files&&input.files[0]).filter(Boolean).slice(0,3);
-    if(selectedFiles.length){
-      try{
-        notice(text.uploading);
-        photos=[];
-        for(const file of selectedFiles){
-          if(typeof uploadPhotoToSupabase==="function")photos.push(await uploadPhotoToSupabase(file));
-          else if(typeof readPhotoFile==="function")photos.push(await readPhotoFile(file));
+      let photos=typeof productPhotos==="function"?productPhotos(existing):((existing?.photos&&existing.photos.length)?existing.photos:(existing?.photo?[existing.photo]:[]));
+      const selectedFiles=[...document.querySelectorAll(".photo-input")].map(input=>input.files&&input.files[0]).filter(Boolean).slice(0,3);
+      if(selectedFiles.length){
+        try{
+          notice(text.uploading);
+          photos=[];
+          for(const file of selectedFiles){
+            if(typeof uploadPhotoToSupabase==="function")photos.push(await uploadPhotoToSupabase(file));
+            else if(typeof readPhotoFile==="function")photos.push(await readPhotoFile(file));
+          }
+        }catch(error){
+          notice(error.message||text.uploadError);
+          return;
         }
-      }catch(error){
-        notice(error.message||text.uploadError);
-        return;
+      }else{
+        try{if(Array.isArray(pendingPhotoPreviews)&&pendingPhotoPreviews.length)photos=pendingPhotoPreviews.slice(0,3)}catch(error){}
       }
-    }else{
-      try{if(Array.isArray(pendingPhotoPreviews)&&pendingPhotoPreviews.length)photos=pendingPhotoPreviews.slice(0,3)}catch(error){}
+
+      const makerValue=category==="\u7279\u6b8a\u5bdd\u53f0\u4ed8\u5c5e\u54c1"
+        ? (document.querySelector("#accessoryMakerInput")?.value||"").trim()
+        : (document.querySelector("#makerInput")?.value||"").trim();
+      const product={
+        id,
+        name,
+        tais:(document.querySelector("#taisInput")?.value||"").trim(),
+        youtube:(document.querySelector("#youtubeInput")?.value||"").trim(),
+        category,
+        maker:makerValue,
+        features:[...featureSet],
+        description:(document.querySelector("#descriptionInput")?.value||"").trim(),
+        spec:(document.querySelector("#specInput")?.value||"").trim(),
+        price:String(priceValue),
+        score:Math.max(1,Math.min(5,Number(document.querySelector("#scoreInput")?.value)||4)),
+        photo:photos[0]||"",
+        photos
+      };
+      const index=products.findIndex(item=>item.id===id);
+      if(index>=0)products[index]=product;
+      else products.push(product);
+
+      try{adminCategoryFilter=product.category}catch(error){}
+      try{saveProducts()}catch(error){}
+      const sharedSaved=await saveProductsSharedSafe();
+      try{renderMakerOptions?.()}catch(error){}
+      try{renderFeatureFilters?.(false)}catch(error){}
+      try{renderProducts?.()}catch(error){}
+      try{renderAdmin?.()}catch(error){}
+      try{renderCart?.()}catch(error){}
+      resetFormAfterSave();
+      try{window.switchView?.("admin")}catch(error){}
+      requestAnimationFrame(()=>{
+        const target=document.querySelector("#productForm")||document.querySelector("#adminProducts")||document.querySelector("#adminView");
+        target?.scrollIntoView({behavior:"smooth",block:"start"});
+      });
+      notice(sharedSaved?text.saved:text.savedLocal);
+    }finally{
+      finalSaveProduct.__saving=false;
+      if(saveButton){saveButton.disabled=false;saveButton.textContent=saveButtonText||"\u4fdd\u5b58"}
     }
-
-    const makerValue=category==="\u7279\u6b8a\u5bdd\u53f0\u4ed8\u5c5e\u54c1"
-      ? (document.querySelector("#accessoryMakerInput")?.value||"").trim()
-      : (document.querySelector("#makerInput")?.value||"").trim();
-    const product={
-      id,
-      name,
-      tais:(document.querySelector("#taisInput")?.value||"").trim(),
-      youtube:(document.querySelector("#youtubeInput")?.value||"").trim(),
-      category,
-      maker:makerValue,
-      features:[...featureSet],
-      description:(document.querySelector("#descriptionInput")?.value||"").trim(),
-      spec:(document.querySelector("#specInput")?.value||"").trim(),
-      price:String(priceValue),
-      score:Math.max(1,Math.min(5,Number(document.querySelector("#scoreInput")?.value)||4)),
-      photo:photos[0]||"",
-      photos
-    };
-    const index=products.findIndex(item=>item.id===id);
-    if(index>=0)products[index]=product;
-    else products.push(product);
-
-    try{adminCategoryFilter=product.category}catch(error){}
-    try{saveProducts()}catch(error){}
-    let sharedSaved=true;
-    try{await saveProductsEverywhere?.()}catch(error){sharedSaved=false;console.warn(error)}
-    try{renderMakerOptions?.()}catch(error){}
-    try{renderFeatureFilters?.(false)}catch(error){}
-    try{renderProducts?.()}catch(error){}
-    try{renderAdmin?.()}catch(error){}
-    try{renderCart?.()}catch(error){}
-    resetFormAfterSave();
-    try{window.switchView?.("admin")}catch(error){}
-    requestAnimationFrame(()=>{
-      const target=document.querySelector("#productForm")||document.querySelector("#adminProducts")||document.querySelector("#adminView");
-      target?.scrollIntoView({behavior:"smooth",block:"start"});
-    });
-    notice(sharedSaved?text.saved:text.savedLocal);
   }
 
   function showView(id){
@@ -2916,6 +2937,7 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
 </script>
 </body>
 </html>
+
 
 
 
