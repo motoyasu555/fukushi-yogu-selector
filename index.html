@@ -60,8 +60,7 @@ window.handleSave=window.handleSave||async function(event){
   const id=elements.productId.value||crypto.randomUUID();
   const existing=products.find(product=>product.id===id);
   const featureSet=new Set(currentFeatureTags);
-  (elements.featuresInput.value||"").split(/[?,
-]/).map(item=>item.trim()).filter(Boolean).forEach(item=>featureSet.add(item));
+  (elements.featuresInput.value||"").split(/[?,\n]/).map(item=>item.trim()).filter(Boolean).forEach(item=>featureSet.add(item));
   let photos=productPhotos(existing);
   const selectedPhotoFiles=[...elements.photoInputs].map(input=>input.files&&input.files[0]).filter(Boolean).slice(0,3);
   if(selectedPhotoFiles.length){
@@ -724,7 +723,7 @@ function downloadBlob(blob,filename){if(!blob){toast("保存する内容があ�
 function downloadCanvasImage(canvas){if(!canvas){toast("先にプレビューを作成してください");return}const save=blob=>{if(blob)downloadBlob(blob,"福祉用具デモ依頼書.png");else{const a=document.createElement("a");a.href=canvas.toDataURL("image/png");a.download="福祉用具デモ依頼書.png";document.body.append(a);a.click();a.remove()}};if(canvas.toBlob)canvas.toBlob(save,"image/png");else save(null)}
 function downloadPdfBlob(blob){if(!blob){toast("先にPDFプレビューを作成してください");return}downloadBlob(blob,"福祉用具デモ依頼書.pdf")}
 function jpegBytesFromDataUrl(dataUrl){const bin=atob(dataUrl.split(",")[1]||"");const bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);return bytes}
-function pdfFromCanvas(sourceCanvas){if(!sourceCanvas)return null;const pageW=595.28;const pageH=Math.max(841.89,pageW*(sourceCanvas.height/sourceCanvas.width));const jpg=jpegBytesFromDataUrl(sourceCanvas.toDataURL("image/jpeg",0.92));const enc=new TextEncoder();const parts=[];let offset=0;const offsets=[0];const add=data=>{const bytes=typeof data==="string"?enc.encode(data):data;parts.push(bytes);offset+=bytes.length};const addObj=(id,body)=>{offsets[id]=offset;add(id+" 0 obj\n");if(Array.isArray(body)){body.forEach(add)}else add(body);add("\nendobj\n")};add("%PDF-1.4\n%âãÏÓ\n");addObj(1,"<< /Type /Catalog /Pages 2 0 R >>");addObj(2,"<< /Type /Pages /Kids [3 0 R] /Count 1 >>");addObj(3,"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 "+pageW.toFixed(2)+" "+pageH.toFixed(2)+"] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>");const stream="q "+pageW.toFixed(2)+" 0 0 "+pageH.toFixed(2)+" 0 0 cm /Im0 Do Q";addObj(4,"<< /Length "+stream.length+" >>\nstream\n"+stream+"\nendstream");addObj(5,["<< /Type /XObject /Subtype /Image /Width "+sourceCanvas.width+" /Height "+sourceCanvas.height+" /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length "+jpg.length+" >>\nstream\n",jpg,"\nendstream"]);const xref=offset;add("xref\n0 6\n0000000000 65535 f \n");for(let i=1;i<=5;i++)add(String(offsets[i]).padStart(10,"0")+" 00000 n \n");add("trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n"+xref+"\n%%EOF");return new Blob(parts,{type:"application/pdf"})}function renderRenovationResult(result){renovationReasonSummary=result;const box=elements.renovationResult;if(!box)return;box.hidden=false;box.innerHTML="<h3>AI整理結果</h3>";const addSection=(title,text)=>{if(!text)return;const sec=document.createElement("section");sec.innerHTML="<strong>"+escapeHtml(title)+"</strong><p>"+escapeHtml(text)+"</p>";box.append(sec)};addSection("利用者の身体状況",result.user_status);addSection("介護状況",result.care_status);addSection("住宅改修により利用者等は日常生活をどう変えたいか",result.life_change_goal);if(Array.isArray(result.seikatsu_dousa)&&result.seikatsu_dousa.length){const sec=document.createElement("section");sec.innerHTML="<strong>①改善しようとしている生活動作</strong>";const ul=document.createElement("ul");result.seikatsu_dousa.forEach(group=>{(group.items||[]).forEach(item=>{const li=document.createElement("li");li.textContent=(group.category||"分類未整理")+"："+item;ul.append(li)})});sec.append(ul);box.append(sec)}addSection("②具体的な困難な状況",result.konnan_jokyo);if(Array.isArray(result.kaishuu_mokuteki)&&result.kaishuu_mokuteki.length){const sec=document.createElement("section");sec.innerHTML="<strong>③改修目的・期待効果／改修の方針</strong>";const ul=document.createElement("ul");result.kaishuu_mokuteki.forEach(item=>{const li=document.createElement("li");li.textContent=(item.items||[]).join("、")+(item.houshin?"："+item.houshin:"");ul.append(li)});sec.append(ul);box.append(sec)}if(Array.isArray(result.kaishuu_koumoku)&&result.kaishuu_koumoku.length){const sec=document.createElement("section");sec.innerHTML="<strong>④改修項目（改修箇所）</strong>";const ul=document.createElement("ul");result.kaishuu_koumoku.forEach(item=>{const li=document.createElement("li");const locations=(item.locations||[]).join("、");li.textContent=(item.item||"改修項目未整理")+(locations?"【"+locations+"】":"");ul.append(li)});sec.append(ul);box.append(sec)}elements.renovationActions.hidden=false}async function runRenovationReason(){const input=elements.renovationInput?.value.trim()||"";if(!input){toast("住宅改修の相談内容を入力してください");return}elements.runRenovationReason.disabled=true;elements.renovationStatus.textContent="AIが理由書内容を整理しています...";try{const res=await fetch("/api/renovation",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({input})});const data=await res.json();if(!res.ok||!data.ok)throw new Error(data.error||data.detail||"AI整理に失敗しました");renderRenovationResult(data.result);elements.renovationStatus.textContent="整理できました。";toast("住宅改修理由書の内容を整理しました")}catch(error){elements.renovationStatus.textContent="AI整理に失敗しました。時間をおいて再度お試しください。";toast(error.message||"AI整理に失敗しました")}finally{elements.runRenovationReason.disabled=false}}function downloadRenovationWord(){
+function pdfFromCanvas(sourceCanvas){if(!sourceCanvas)return null;const pageW=595.28;const pageH=Math.max(841.89,pageW*(sourceCanvas.height/sourceCanvas.width));const jpg=jpegBytesFromDataUrl(sourceCanvas.toDataURL("image/jpeg",0.92));const enc=new TextEncoder();const parts=[];let offset=0;const offsets=[0];const add=data=>{const bytes=typeof data==="string"?enc.encode(data):data;parts.push(bytes);offset+=bytes.length};const addObj=(id,body)=>{offsets[id]=offset;add(id+" 0 obj\n");if(Array.isArray(body)){body.forEach(add)}else add(body);add("\nendobj\n")};add("%PDF-1.4\n%âãÏÓ\n");addObj(1,"<< /Type /Catalog /Pages 2 0 R >>");addObj(2,"<< /Type /Pages /Kids [3 0 R] /Count 1 >>");addObj(3,"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 "+pageW.toFixed(2)+" "+pageH.toFixed(2)+"] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>");const stream="q "+pageW.toFixed(2)+" 0 0 "+pageH.toFixed(2)+" 0 0 cm /Im0 Do Q";addObj(4,"<< /Length "+stream.length+" >>\nstream\n"+stream+"\nendstream");addObj(5,["<< /Type /XObject /Subtype /Image /Width "+sourceCanvas.width+" /Height "+sourceCanvas.height+" /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length "+jpg.length+" >>\nstream\n",jpg,"\nendstream"]);const xref=offset;add("xref\n0 6\n0000000000 65535 f \n");for(let i=1;i<=5;i++)add(String(offsets[i]).padStart(10,"0")+" 00000 n \n");add("trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n"+xref+"\n%%EOF");return new Blob(parts,{type:"application/pdf"})}function renderRenovationResult(result){renovationReasonSummary=result;const box=elements.renovationResult;if(!box)return;box.hidden=false;box.innerHTML="<h3>AI整理結果</h3>";const addSection=(title,text)=>{if(!text)return;const sec=document.createElement("section");sec.innerHTML="<strong>"+escapeHtml(title)+"</strong><p>"+escapeHtml(text)+"</p>";box.append(sec)};addSection("利用者の身体状況",result.user_status);addSection("介護状況",result.care_status);addSection("住宅改修により利用者等は日常生活をどう変えたいか",result.life_change_goal);if(Array.isArray(result.seikatsu_dousa)&&result.seikatsu_dousa.length){const sec=document.createElement("section");sec.innerHTML="<strong>①改善しようとしている生活動作</strong>";const ul=document.createElement("ul");result.seikatsu_dousa.forEach(group=>{(group.items||[]).forEach(item=>{const li=document.createElement("li");li.textContent=(group.category||"分類未整理")+"："+item;ul.append(li)})});sec.append(ul);box.append(sec)}addSection("②具体的な困難な状況",result.konnan_jokyo);if(Array.isArray(result.kaishuu_mokuteki)&&result.kaishuu_mokuteki.length){const sec=document.createElement("section");sec.innerHTML="<strong>③改修目的・期待効果／改修の方針</strong>";const ul=document.createElement("ul");result.kaishuu_mokuteki.forEach(item=>{const li=document.createElement("li");li.textContent=(item.items||[]).join("、")+(item.houshin?"："+item.houshin:"");ul.append(li)});sec.append(ul);box.append(sec)}if(Array.isArray(result.kaishuu_koumoku)&&result.kaishuu_koumoku.length){const sec=document.createElement("section");sec.innerHTML="<strong>④改修項目（改修箇所）</strong>";const ul=document.createElement("ul");result.kaishuu_koumoku.forEach(item=>{const li=document.createElement("li");const locations=(item.locations||[]).join("、");li.textContent=(item.item||"改修項目未整理")+(locations?"【"+locations+"】":"");ul.append(li)});sec.append(ul);box.append(sec)}elements.renovationActions.hidden=false}async function runRenovationReason(){const input=elements.renovationInput?.value.trim()||"";if(!input){toast("住宅改修の相談内容を入力してください");return}elements.runRenovationReason.disabled=true;elements.renovationStatus.textContent="AIが理由書内容を整理しています...";try{const res=await fetch((location.protocol==="file:"?"https://fukushi-yogu-selector.vercel.app":"")+"/api/renovation",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({input})});const data=await res.json();if(!res.ok||!data.ok)throw new Error(data.error||data.detail||"AI整理に失敗しました");renderRenovationResult(data.result);elements.renovationStatus.textContent="整理できました。";toast("住宅改修理由書の内容を整理しました")}catch(error){elements.renovationStatus.textContent="AI整理に失敗しました。時間をおいて再度お試しください。";toast(error.message||"AI整理に失敗しました")}finally{elements.runRenovationReason.disabled=false}}function downloadRenovationWord(){
   if(!renovationReasonSummary){toast("先にAIで整理してください");return}
   const canvas=makeRenovationReasonCanvas();
   const blob=pdfFromCanvas(canvas);
@@ -750,7 +749,7 @@ function youtubeEmbedUrl(url){try{const parsed=new URL(url);let id="";if(parsed.
 function renderAiTriageResult(result){aiTriageSummary=result||{};const box=elements.aiTriageResult;if(!box)return;box.hidden=false;box.innerHTML="<h3>AI整理結果</h3>";const addSection=(title,text)=>{if(!text)return;const sec=document.createElement("section");sec.className="ai-candidate";const strong=document.createElement("strong");strong.textContent=title;const p=document.createElement("p");p.textContent=text;sec.append(strong,p);box.append(sec)};addSection("相談内容の要点",aiTriageSummary.summary);if(Array.isArray(aiTriageSummary.home_issues)&&aiTriageSummary.home_issues.length){const sec=document.createElement("section");sec.className="ai-candidate";const strong=document.createElement("strong");strong.textContent="住環境・動作上の確認点";const ul=document.createElement("ul");aiTriageSummary.home_issues.forEach(issue=>{const li=document.createElement("li");li.textContent=issue;ul.append(li)});sec.append(strong,ul);box.append(sec)}if(Array.isArray(aiTriageSummary.candidates)&&aiTriageSummary.candidates.length){const sec=document.createElement("section");sec.innerHTML="<h3>おすすめ候補</h3>";aiTriageSummary.candidates.forEach(candidate=>{const div=document.createElement("div");div.className="ai-candidate";const strong=document.createElement("strong");strong.textContent=candidate.item||"候補";const p=document.createElement("p");p.textContent=candidate.reason||"";div.append(strong,p);sec.append(div)});box.append(sec)}addSection("専門相談員への申し送り",aiTriageSummary.handoff_note);const selected=document.createElement("section");selected.className="ai-selected-products";selected.innerHTML="<h4>現在選定している商品</h4>";const entries=typeof selectedCartEntries==="function"?selectedCartEntries():[];if(entries.length){const ul=document.createElement("ul");entries.forEach(entry=>{const li=document.createElement("li");li.textContent=entry.product?.name||"";ul.append(li)});selected.append(ul)}else{const p=document.createElement("p");p.className="empty";p.textContent="選定商品はまだありません。AI整理結果を参考に商品を探してください。";selected.append(p)}box.append(selected);const actions=document.createElement("div");actions.className="ai-result-actions";const copy=document.createElement("button");copy.className="line-copy";copy.type="button";copy.textContent="整理結果をコピー";copy.addEventListener("click",async()=>{const text=aiTriageResultText(aiTriageSummary);try{await navigator.clipboard.writeText(text)}catch(_){const area=document.createElement("textarea");area.value=text;document.body.append(area);area.select();document.execCommand("copy");area.remove()}toast("AI整理結果をコピーしました")});const cart=document.createElement("button");cart.className="line-open";cart.type="button";cart.textContent="選定した商品を見る";cart.addEventListener("click",()=>{if(typeof showCartAtSelectedTop==="function")showCartAtSelectedTop();else switchView("cart")});actions.append(copy,cart);box.append(actions);box.scrollIntoView({behavior:"smooth",block:"start"})}
 function aiTriageResultText(result){const lines=["【AIらくらく選定 整理結果】",""];if(result?.summary)lines.push("■相談内容の要点",result.summary,"");if(Array.isArray(result?.home_issues)&&result.home_issues.length){lines.push("■住環境・動作上の確認点");result.home_issues.forEach(issue=>lines.push("・"+issue));lines.push("")}if(Array.isArray(result?.candidates)&&result.candidates.length){lines.push("■おすすめ候補");result.candidates.forEach(candidate=>{lines.push("・"+(candidate.item||"候補"));if(candidate.reason)lines.push("  理由："+candidate.reason)});lines.push("")}if(result?.handoff_note)lines.push("■専門相談員への申し送り",result.handoff_note);return lines.join("\n")}
 function localAiTriageFallback(input,home){const text=(input+" "+home).trim();const candidates=[];const add=(item,reason)=>{if(!candidates.some(candidate=>candidate.item===item))candidates.push({item,reason})};const has=words=>words.some(word=>text.includes(word));if(has(["歩行","ふらつき","転倒","外出","屋外","買い物","疲れ"]))add("歩行器・シルバーカー","歩行時のふらつきや転倒リスク、屋外移動時の疲労軽減が課題として考えられるため、使用場所と身体状況を確認した上で候補にします。");if(has(["車いす","車椅子","長く歩けない","通院"]))add("車いす","長距離移動や通院、外出時の移動負担が大きい場合に、安全な移動手段として確認します。");if(has(["ベッド","起き上がり","寝起き","立ち上がり","寝返り"]))add("特殊寝台・特殊寝台付属品","起き上がり、端座位保持、立ち上がりに負担がある場合、ベッド高さ調整や背上げ機能の必要性を確認します。");if(has(["トイレ","排泄","便座","立てない"]))add("トイレ用手すり","排泄時の立ち座りや方向転換で不安定さがある場合、設置場所と動作導線を確認した上で候補にします。");if(has(["浴室","入浴","風呂","浴槽","またぎ"]))add("入浴補助用具・浴室手すり","浴槽またぎ、洗い場での立ち座り、濡れた床での転倒リスクに対して、購入品や住宅改修も含めて確認します。");if(has(["段差","玄関","上がり框","スロープ","車いすで入れない"]))add("スロープ","玄関や屋外の段差が移動の妨げになっている場合、段差高、勾配、介助者の有無を確認して候補にします。");if(!candidates.length)add("歩行器・手すり等の安全確保用具","相談内容から生活動作の不安定さが想定されるため、訪問時に移動、立ち座り、排泄、入浴の各動作を確認して候補を絞ります。");const issues=[];if(home)issues.push("住環境: "+home);if(has(["段差","玄関","廊下","階段"]))issues.push("移動経路や段差で転倒リスクがないか確認が必要です。");if(has(["トイレ","浴室","ベッド"]))issues.push("使用場所ごとの立ち座り、方向転換、手すり位置の確認が必要です。");if(!issues.length)issues.push("訪問時に本人の動作能力、介助者の有無、設置スペースを確認してください。");return{summary:input?"相談内容から、日常生活動作の安全確保と介助量軽減を目的に福祉用具の候補整理が必要です。入力内容をもとに、訪問時に確認すべき点と候補用具を整理しました。":"住環境の情報をもとに、転倒予防と生活動作の安定を目的として候補を整理しました。",home_issues:issues.slice(0,4),candidates:candidates.slice(0,5),handoff_note:"訪問時は、本人の立ち上がり、歩行、移乗、排泄、入浴動作を実際に確認し、既に使用中の用具や設置スペース、介助者の有無を確認してください。"}}
-async function runAiTriage(){const input=elements.aiTroubleInput?.value.trim()||"";const home=elements.aiHomeInput?.value.trim()||"";if(!input&&!home){toast("相談内容を入力してください");return}elements.runAiTriage.disabled=true;elements.aiTriageStatus.textContent="AIが相談内容を整理しています...";const fallback=()=>{renderAiTriageResult(localAiTriageFallback(input,home));elements.aiTriageStatus.textContent="通信が混み合っているため、入力内容から整理しました。";toast("入力内容から整理結果を作成しました")};try{const controller=new AbortController();const timeout=new Promise((_,reject)=>setTimeout(()=>{controller.abort();reject(new Error("timeout"))},5000));const res=await Promise.race([fetch("/api/triage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({input,home}),signal:controller.signal}),timeout]);const data=await res.json();if(!res.ok)throw new Error(data.error||data.detail||"AI整理に失敗しました");renderAiTriageResult(data.result||data);elements.aiTriageStatus.textContent="整理できました。";toast("AI相談内容を整理しました")}catch(error){fallback()}finally{elements.runAiTriage.disabled=false}}
+async function runAiTriage(){const input=elements.aiTroubleInput?.value.trim()||"";const home=elements.aiHomeInput?.value.trim()||"";if(!input&&!home){toast("相談内容を入力してください");return}elements.runAiTriage.disabled=true;elements.aiTriageStatus.textContent="AIが相談内容を整理しています...";const fallback=()=>{renderAiTriageResult(localAiTriageFallback(input,home));elements.aiTriageStatus.textContent="通信が混み合っているため、入力内容から整理しました。";toast("入力内容から整理結果を作成しました")};try{const controller=new AbortController();const timeout=new Promise((_,reject)=>setTimeout(()=>{controller.abort();reject(new Error("timeout"))},5000));const res=await Promise.race([fetch((location.protocol==="file:"?"https://fukushi-yogu-selector.vercel.app":"")+"/api/triage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({input,home}),signal:controller.signal}),timeout]);const data=await res.json();if(!res.ok)throw new Error(data.error||data.detail||"AI整理に失敗しました");renderAiTriageResult(data.result||data);elements.aiTriageStatus.textContent="整理できました。";toast("AI相談内容を整理しました")}catch(error){fallback()}finally{elements.runAiTriage.disabled=false}}
 window.renderAiTriageResult=renderAiTriageResult;window.aiTriageResultText=aiTriageResultText;window.localAiTriageFallback=localAiTriageFallback;window.runAiTriage=runAiTriage;
 function renderAdminCategoryCards(){if(!elements.adminCategoryCards)return;elements.adminCategoryCards.replaceChildren();const all=document.createElement("button");all.type="button";all.className="category-card";all.classList.toggle("active",!adminCategoryFilter);all.innerHTML="<strong>すべて</strong><span>"+products.length+"件の商品</span>";all.addEventListener("click",()=>{adminCategoryFilter="";renderAdmin()});elements.adminCategoryCards.append(all);categories.forEach(category=>{const count=products.filter(product=>product.category===category).length;const button=document.createElement("button");button.type="button";button.className="category-card";button.classList.toggle("active",adminCategoryFilter===category);button.innerHTML="<strong></strong><span></span>";button.querySelector("strong").textContent=category;button.querySelector("span").textContent=count+"件の商品";button.addEventListener("click",()=>{adminCategoryFilter=category;renderAdmin()});elements.adminCategoryCards.append(button)})}
 function editProduct(id){const product=products.find(item=>item.id===id);if(!product)return;elements.productId.value=product.id;elements.nameInput.value=product.name||"";elements.taisInput.value=product.tais||"";elements.youtubeInput.value=product.youtube||"";elements.categoryInput.value=product.category||"";elements.makerInput.value=product.category==="特殊寝台付属品"?"":product.maker||"";elements.accessoryMakerInput.value=product.category==="特殊寝台付属品"?product.maker||"":"";elements.descriptionInput.value=product.description||"";elements.specInput.value=product.spec||"";elements.priceInput.value=product.price||"";currentFeatureTags=[...(product.features||[])];pendingPhotoPreviews=[];pendingPhotoFiles=[];elements.photoInputs?.forEach(input=>input.value="");updateAccessoryMakerField();updateStarRating(product.score||3);renderFeatureTagList();renderFeatureCandidateList();renderPhotoPreview(productPhotos(product));elements.form?.scrollIntoView({behavior:"smooth",block:"start"})}
@@ -1489,7 +1488,7 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
       try{
         const controller=new AbortController();
         const timeout=new Promise((_,reject)=>setTimeout(()=>{controller.abort();reject(new Error("timeout"))},5000));
-        const res=await Promise.race([fetch("/api/triage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({input,home}),signal:controller.signal}),timeout]);
+        const res=await Promise.race([fetch((location.protocol==="file:"?"https://fukushi-yogu-selector.vercel.app":"")+"/api/triage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({input,home}),signal:controller.signal}),timeout]);
         let data={};
         try{data=await res.json()}catch(_){}
         if(!res.ok||data.ok===false)throw new Error(data.error||data.detail||"AI整理に失敗しました");
@@ -2686,8 +2685,341 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
   [200,800,1600,3000].forEach(delay=>setTimeout(bind,delay));
 })();
 </script>
+<script>
+/* Final product form save and feature-tag fix. */
+(function(){
+  function notice(message){
+    try{window.toast?.(message)}catch(error){}
+    const node=document.querySelector("#toast");
+    if(node){
+      node.textContent=message;
+      node.classList.add("show");
+      setTimeout(()=>node.classList.remove("show"),1800);
+    }
+  }
+
+  function getFeatureTags(){
+    try{
+      if(Array.isArray(currentFeatureTags))return currentFeatureTags;
+    }catch(error){}
+    window.__currentFeatureTags=window.__currentFeatureTags||[];
+    return window.__currentFeatureTags;
+  }
+
+  function renderFeatureTagsFinal(){
+    try{window.renderFeatureTagList?.();return}catch(error){}
+    const list=document.querySelector("#featureTagList");
+    if(!list)return;
+    list.replaceChildren();
+    getFeatureTags().forEach((feature,index)=>{
+      const chip=document.createElement("button");
+      chip.type="button";
+      chip.className="feature-tag";
+      chip.textContent=feature+" ×";
+      chip.addEventListener("click",()=>{
+        getFeatureTags().splice(index,1);
+        renderFeatureTagsFinal();
+      });
+      list.append(chip);
+    });
+  }
+
+  function addFeatureTagFinal(event){
+    if(event?.__finalFeatureTagHandled)return;
+    if(event)event.__finalFeatureTagHandled=true;
+    if(event){
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+    }
+    const input=document.querySelector("#featuresInput");
+    const tags=getFeatureTags();
+    String(input?.value||"").split(/[、,\n]/).map(v=>v.trim()).filter(Boolean).forEach(feature=>{
+      if(!tags.includes(feature))tags.push(feature);
+    });
+    if(input)input.value="";
+    renderFeatureTagsFinal();
+    try{window.renderFeatureCandidateList?.()}catch(error){}
+  }
+
+  function resetFormAfterSave(){
+    const form=document.querySelector("#productForm");
+    form?.reset();
+    const productId=document.querySelector("#productId");
+    if(productId)productId.value="";
+    getFeatureTags().length=0;
+    document.querySelectorAll(".photo-input").forEach(input=>input.value="");
+    try{pendingPhotoPreviews=[];pendingPhotoFiles=[]}catch(error){}
+    renderFeatureTagsFinal();
+    try{window.renderFeatureCandidateList?.()}catch(error){}
+    try{window.renderPhotoPreview?.([])}catch(error){
+      const preview=document.querySelector("#photoPreview");
+      if(preview){
+        preview.classList.remove("multi");
+        preview.textContent="写真は未選択です";
+      }
+    }
+    try{window.updateStarRating?.(4)}catch(error){}
+    try{window.updateAccessoryMakerField?.()}catch(error){}
+  }
+
+  async function finalSaveProduct(event){
+    if(event?.__finalProductSaveHandled)return;
+    if(event)event.__finalProductSaveHandled=true;
+    if(event){
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+    }
+    const nameInput=document.querySelector("#nameInput");
+    const categoryInput=document.querySelector("#categoryInput");
+    const priceInput=document.querySelector("#priceInput");
+    const name=(nameInput?.value||"").trim();
+    const category=categoryInput?.value||"";
+    const priceValue=typeof priceNumber==="function"?priceNumber(priceInput?.value):Number(String(priceInput?.value||"").replace(/[^\d]/g,""));
+    if(!name||!category){notice("商品名と品目を入力してください");return}
+    if(!priceValue){notice("月額単位数を半角数字で入力してください");return}
+
+    const productId=document.querySelector("#productId");
+    const id=productId?.value||crypto.randomUUID();
+    const existing=products.find(product=>product.id===id);
+    const featureSet=new Set(getFeatureTags());
+    String(document.querySelector("#featuresInput")?.value||"").split(/[、,\n]/).map(v=>v.trim()).filter(Boolean).forEach(v=>featureSet.add(v));
+
+    let photos=typeof productPhotos==="function"?productPhotos(existing):((existing?.photos&&existing.photos.length)?existing.photos:(existing?.photo?[existing.photo]:[]));
+    const selectedFiles=[...document.querySelectorAll(".photo-input")].map(input=>input.files&&input.files[0]).filter(Boolean).slice(0,3);
+    if(selectedFiles.length){
+      try{
+        notice("写真をアップロードしています...");
+        photos=[];
+        for(const file of selectedFiles){
+          if(typeof uploadPhotoToSupabase==="function")photos.push(await uploadPhotoToSupabase(file));
+          else if(typeof readPhotoFile==="function")photos.push(await readPhotoFile(file));
+        }
+      }catch(error){
+        notice(error.message||"写真をアップロードできませんでした");
+        return;
+      }
+    }else{
+      try{
+        if(Array.isArray(pendingPhotoPreviews)&&pendingPhotoPreviews.length)photos=pendingPhotoPreviews.slice(0,3);
+      }catch(error){}
+    }
+
+    const makerValue=category==="特殊寝台付属品"
+      ? (document.querySelector("#accessoryMakerInput")?.value||"").trim()
+      : (document.querySelector("#makerInput")?.value||"").trim();
+    const product={
+      id,
+      name,
+      tais:(document.querySelector("#taisInput")?.value||"").trim(),
+      youtube:(document.querySelector("#youtubeInput")?.value||"").trim(),
+      category,
+      maker:makerValue,
+      features:[...featureSet],
+      description:(document.querySelector("#descriptionInput")?.value||"").trim(),
+      spec:(document.querySelector("#specInput")?.value||"").trim(),
+      price:String(priceValue),
+      score:Math.max(1,Math.min(5,Number(document.querySelector("#scoreInput")?.value)||4)),
+      photo:photos[0]||"",
+      photos
+    };
+    const index=products.findIndex(item=>item.id===id);
+    if(index>=0)products[index]=product;
+    else products.push(product);
+
+    try{adminCategoryFilter=product.category}catch(error){}
+    try{saveProducts()}catch(error){}
+    let sharedSaved=true;
+    try{await saveProductsEverywhere?.()}catch(error){sharedSaved=false;console.warn(error)}
+    try{renderMakerOptions?.()}catch(error){}
+    try{renderFeatureFilters?.(false)}catch(error){}
+    try{renderProducts?.()}catch(error){}
+    try{renderAdmin?.()}catch(error){}
+    try{renderCart?.()}catch(error){}
+    resetFormAfterSave();
+    try{window.switchView?.("admin")}catch(error){}
+    requestAnimationFrame(()=>{
+      const target=document.querySelector("#productForm")||document.querySelector("#adminProducts")||document.querySelector("#adminView");
+      target?.scrollIntoView({behavior:"smooth",block:"start"});
+    });
+    notice(sharedSaved?"商品を保存しました":"商品は保存しました。共有保存のみ確認してください");
+  }
+
+  function bind(){
+    const addButton=document.querySelector("#addFeatureTag");
+    if(addButton&&addButton.dataset.finalFeatureBound!=="true"){
+      addButton.dataset.finalFeatureBound="true";
+      addButton.addEventListener("click",addFeatureTagFinal,true);
+      addButton.addEventListener("touchend",addFeatureTagFinal,{capture:true,passive:false});
+    }
+    const featureInput=document.querySelector("#featuresInput");
+    if(featureInput&&featureInput.dataset.finalFeatureInputBound!=="true"){
+      featureInput.dataset.finalFeatureInputBound="true";
+      featureInput.addEventListener("keydown",event=>{
+        if(event.key==="Enter")addFeatureTagFinal(event);
+      },true);
+    }
+    const form=document.querySelector("#productForm");
+    if(form&&form.dataset.finalSaveProductBound!=="true"){
+      form.dataset.finalSaveProductBound="true";
+      form.addEventListener("submit",finalSaveProduct,true);
+    }
+  }
+
+  document.addEventListener("click",event=>{
+    if(event.target.closest("#addFeatureTag"))return addFeatureTagFinal(event);
+  },true);
+  document.addEventListener("submit",event=>{
+    if(event.target?.closest?.("#productForm"))return finalSaveProduct(event);
+  },true);
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",bind);
+  else bind();
+  [200,800,1600,3000].forEach(delay=>setTimeout(bind,delay));
+})();
+</script>
+<script>
+(function(){
+  function showView(id){
+    document.querySelectorAll(".view").forEach(view=>view.classList.remove("active"));
+    const view=document.querySelector(id);
+    if(view){
+      view.classList.add("active");
+      requestAnimationFrame(()=>view.scrollIntoView({behavior:"smooth",block:"start"}));
+    }
+  }
+  function openAiTriage(event){
+    if(event){event.preventDefault();event.stopPropagation();}
+    if(typeof window.showAiTriageAtTop==="function"){window.showAiTriageAtTop();return;}
+    showView("#aiTriageView");
+  }
+  function openRenovation(event){
+    if(event){event.preventDefault();event.stopPropagation();}
+    showView("#renovationView");
+  }
+  function bindClick(selector,handler){
+    document.querySelectorAll(selector).forEach(button=>{
+      if(button.dataset.finalClickFixed==="true")return;
+      button.dataset.finalClickFixed="true";
+      button.addEventListener("click",handler);
+      button.addEventListener("touchend",handler,{passive:false});
+    });
+  }
+  function escapeText(text){
+    return String(text||"").replace(/[&<>"']/g,mark=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[mark]));
+  }
+  function renderRenovationFallback(result){
+    const box=document.querySelector("#renovationResult");
+    const actions=document.querySelector("#renovationActions");
+    if(!box)return;
+    box.hidden=false;
+    box.innerHTML="<h3>AI整理結果</h3>";
+    const add=(title,text)=>{
+      if(!text)return;
+      const section=document.createElement("section");
+      section.innerHTML="<strong>"+escapeText(title)+"</strong><p>"+escapeText(text)+"</p>";
+      box.append(section);
+    };
+    add("利用者の身体状況",result.user_status);
+    add("介護状況",result.care_status);
+    add("住宅改修により日常生活をどう変えたいか",result.life_change_goal);
+    if(Array.isArray(result.seikatsu_dousa)&&result.seikatsu_dousa.length){
+      const section=document.createElement("section");
+      section.innerHTML="<strong>①改善しようとしている生活動作</strong>";
+      const list=document.createElement("ul");
+      result.seikatsu_dousa.forEach(group=>(group.items||[]).forEach(item=>{
+        const li=document.createElement("li");
+        li.textContent=(group.category||"分類未整理")+"："+item;
+        list.append(li);
+      }));
+      section.append(list);
+      box.append(section);
+    }
+    add("②具体的な困難な状況",result.konnan_jokyo);
+    if(Array.isArray(result.kaishuu_mokuteki)&&result.kaishuu_mokuteki.length){
+      const section=document.createElement("section");
+      section.innerHTML="<strong>③改修目的・期待効果／改修の方針</strong>";
+      const list=document.createElement("ul");
+      result.kaishuu_mokuteki.forEach(item=>{
+        const li=document.createElement("li");
+        li.textContent=(item.items||[]).join("、")+(item.houshin?"："+item.houshin:"");
+        list.append(li);
+      });
+      section.append(list);
+      box.append(section);
+    }
+    if(Array.isArray(result.kaishuu_koumoku)&&result.kaishuu_koumoku.length){
+      const section=document.createElement("section");
+      section.innerHTML="<strong>④改修項目（改修箇所）</strong>";
+      const list=document.createElement("ul");
+      result.kaishuu_koumoku.forEach(item=>{
+        const li=document.createElement("li");
+        const locations=(item.locations||[]).join("、");
+        li.textContent=(item.item||"改修項目未整理")+(locations?"【"+locations+"】":"");
+        list.append(li);
+      });
+      section.append(list);
+      box.append(section);
+    }
+    if(actions)actions.hidden=false;
+  }
+  async function runRenovationFallback(event){
+    if(event){event.preventDefault();event.stopPropagation();}
+    const button=document.querySelector("#runRenovationReason");
+    const input=document.querySelector("#renovationInput")?.value.trim()||"";
+    const status=document.querySelector("#renovationStatus");
+    if(!input){
+      if(status)status.textContent="住宅改修の相談内容を入力してください。";
+      return;
+    }
+    if(button)button.disabled=true;
+    if(status)status.textContent="AIが理由書内容を整理しています...";
+    try{
+      const url=(location.protocol==="file:"?"https://fukushi-yogu-selector.vercel.app":"")+"/api/renovation";
+      const response=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({input})});
+      const data=await response.json();
+      if(!response.ok||!data.ok)throw new Error(data.error||data.detail||"AI整理に失敗しました");
+      if(typeof window.renderRenovationResult==="function")window.renderRenovationResult(data.result);
+      else renderRenovationFallback(data.result||data);
+      if(status)status.textContent="整理できました。";
+    }catch(error){
+      if(status)status.textContent="AI整理に失敗しました。時間をおいて再度お試しください。";
+    }finally{
+      if(button)button.disabled=false;
+    }
+  }
+  function ensureButtons(){
+    const banner=document.querySelector("#aiTriageBanner");
+    if(banner){
+      banner.hidden=false;
+      banner.style.display="";
+      banner.style.cursor="pointer";
+    }
+    bindClick("#aiTriageBanner,#openAiTriageTop,#openAiTriage",openAiTriage);
+    bindClick("#openRenovationReason",openRenovation);
+    bindClick("#renovationBack",event=>{event.preventDefault();event.stopPropagation();showView("#finderView");});
+    const runButton=document.querySelector("#runRenovationReason");
+    if(runButton&&!runButton.dataset.finalRunFixed){
+      runButton.dataset.finalRunFixed="true";
+      runButton.addEventListener("click",event=>{
+        event.stopImmediatePropagation();
+        runRenovationFallback(event);
+      },true);
+      runButton.addEventListener("touchend",event=>{
+        event.stopImmediatePropagation();
+        runRenovationFallback(event);
+      },{capture:true,passive:false});
+    }
+  }
+  document.addEventListener("DOMContentLoaded",ensureButtons);
+  window.addEventListener("load",ensureButtons);
+  setTimeout(ensureButtons,300);
+  setTimeout(ensureButtons,1200);
+})();
+</script>
 </body>
 </html>
+
 
 
 
