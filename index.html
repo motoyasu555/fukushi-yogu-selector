@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ja">
 <head>
 <meta charset="utf-8">
@@ -771,7 +771,7 @@ function renovationPurposeDetails(result){const direct=Array.isArray(result?.kai
 
 
 function openDemoRequest(kind){const hasContent=selectedCartEntries().length||aiTriageSummary;if(!hasContent){toast("選定商品またはAI整理結果がありません");return}demoPreviewCanvas=makeDemoRequestCanvas();demoPreviewPdfBlob=pdfFromCanvas(demoPreviewCanvas);if(elements.demoPreviewTitle)elements.demoPreviewTitle.textContent=kind==="pdf"?"PDFプレビュー":"画像プレビュー";if(elements.demoPreviewBody){elements.demoPreviewBody.innerHTML="";const img=document.createElement("img");img.className="demo-preview-image";img.alt="デモ依頼書プレビュー";img.src=demoPreviewCanvas.toDataURL("image/png");elements.demoPreviewBody.append(img)}if(elements.demoPreviewModal){elements.demoPreviewModal.classList.add("show");elements.demoPreviewModal.setAttribute("aria-hidden","false")}toast("プレビューを表示しました")}
-function renovationShort(value,fallback=""){const text=String(value||fallback||"").replace(/\s+/g," ").trim();return text.length>100?text.slice(0,99)+"…":text}
+function renovationShort(value,fallback=""){return String(value||fallback||"").replace(/\s+/g," ").replace(/(\.{3}|…)$/u,"").trim()}
 function renovationShortDifficulty(group,result){return renovationShort(group?.text_short,group?.text||result?.konnan_jokyo)}
 function renovationShortPolicy(group){return renovationShort(group?.houshin_short,group?.houshin)}
 
@@ -2984,15 +2984,4 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
 
