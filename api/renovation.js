@@ -72,6 +72,7 @@ export default async function handler(req, res) {
       "・医療的な断定や介護保険の可否の断定は避け、入力内容に基づく一次アセスメントの範囲にとどめること。",
       "・入力内容だけでは分類や項目を判断しにくい場合、文章欄に『不明』『詳細不明』『未確認』『情報不足』『訪問時確認』とは書かないこと。根拠のある範囲で生活動作上の支障として整理すること。",
       "・全体として、自治体提出用の理由書に転記しやすい、具体性のある下書きにすること。ただし文章量は従来の約3分の2を目安とし、枠内に収まりやすい簡潔な表現にすること。抽象的な一文回答や短すぎる箇条書きは禁止。",
+      "・文章を途中で省略しないこと。『...』『…』などの省略記号で文末を切らず、短くても最後まで完結した文章で出力すること。",
       "・出力は必ずJSONのみ。説明文やMarkdownは付けないでください。",
       "",
       "出力JSON構造:",
@@ -122,28 +123,28 @@ export default async function handler(req, res) {
       result = JSON.parse(match[0]);
     }
 
-    const limitText = value => {
+    const normalizeText = value => {
       const text = String(value || "").replace(/\s+/g, " ").trim();
-      return text.length > 100 ? text.slice(0, 99) + "…" : text;
+      return text.replace(/(\.{3}|…)$/u, "").trim();
     };
     ["user_status", "care_status", "life_change_goal", "konnan_jokyo"].forEach(key => {
-      if (result && result[key]) result[key] = limitText(result[key]);
+      if (result && result[key]) result[key] = normalizeText(result[key]);
     });
     if (Array.isArray(result?.konnan_jokyo_by_category)) {
       result.konnan_jokyo_by_category.forEach(item => {
-        if (item?.text) item.text = limitText(item.text);
-        if (item?.text_short) item.text_short = limitText(item.text_short);
+        if (item?.text) item.text = normalizeText(item.text);
+        if (item?.text_short) item.text_short = normalizeText(item.text_short);
       });
     }
     if (Array.isArray(result?.kaishuu_mokuteki)) {
       result.kaishuu_mokuteki.forEach(item => {
-        if (item?.houshin) item.houshin = limitText(item.houshin);
+        if (item?.houshin) item.houshin = normalizeText(item.houshin);
       });
     }
     if (Array.isArray(result?.kaishuu_mokuteki_by_category)) {
       result.kaishuu_mokuteki_by_category.forEach(item => {
-        if (item?.houshin) item.houshin = limitText(item.houshin);
-        if (item?.houshin_short) item.houshin_short = limitText(item.houshin_short);
+        if (item?.houshin) item.houshin = normalizeText(item.houshin);
+        if (item?.houshin_short) item.houshin_short = normalizeText(item.houshin_short);
       });
     }
 
@@ -155,4 +156,3 @@ export default async function handler(req, res) {
     });
   }
 }
-
