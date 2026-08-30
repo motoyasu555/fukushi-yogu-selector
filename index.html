@@ -3071,6 +3071,18 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
     history.replaceState(state, "", location.href);
   }
 
+  function addRootBackGuard() {
+    const view = currentViewName();
+    const state = history.state || {};
+    if (state[appStateKey] && state.rootGuard) return;
+    lastView = view;
+    history.pushState({
+      [appStateKey]: true,
+      view,
+      rootGuard: true
+    }, "", location.href);
+  }
+
   function pushCurrentView() {
     if (restoring) return;
     const view = currentViewName();
@@ -3106,6 +3118,7 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
 
   function bindHistory() {
     replaceInitialState();
+    addRootBackGuard();
     observeViewChanges();
     [
       "switchView",
@@ -3125,6 +3138,11 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
     restoring = true;
     const ok = applyView(state.view || "finder");
     lastView = ok ? (state.view || "finder") : currentViewName();
+    if ((state.view || "finder") === "finder" && !state.rootGuard) {
+      setTimeout(() => {
+        if (currentViewName() === "finder") addRootBackGuard();
+      }, 0);
+    }
     setTimeout(() => {
       restoring = false;
     }, 200);
@@ -3139,5 +3157,4 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
 </script>
 </body>
 </html>
-
 
