@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ja">
 <head>
 <meta charset="utf-8">
@@ -2982,6 +2982,162 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
   [200,800,1600,3000].forEach(delay=>setTimeout(bind,delay));
 })();
 </script>
+<script>
+(() => {
+  const appStateKey = "fukushiYoguApp";
+  const viewIds = [
+    "finderView",
+    "guideView",
+    "detailView",
+    "adminView",
+    "videoView",
+    "lineView",
+    "cartView",
+    "aiTriageView",
+    "renovationView"
+  ];
+  let restoring = false;
+  let lastView = "";
+  let pushTimer = 0;
+
+  function viewNameFromId(id) {
+    return String(id || "finderView").replace(/View$/, "") || "finder";
+  }
+
+  function viewIdFromName(name) {
+    const normalized = String(name || "finder").replace(/View$/, "");
+    return `${normalized}View`;
+  }
+
+  function currentViewName() {
+    const active = viewIds
+      .map(id => document.getElementById(id))
+      .find(view => view && view.classList.contains("active"));
+    return viewNameFromId(active ? active.id : "finderView");
+  }
+
+  function scrollToView(viewName) {
+    const id = viewIdFromName(viewName);
+    const target = document.getElementById(id);
+    if (!target) return;
+    const focusMap = {
+      finder: "#categoryCards",
+      detail: "#detailTitle",
+      cart: "#cartTitle",
+      guide: "#guideTitle",
+      aiTriage: "#aiTriageTitle",
+      renovation: "#renovationTitle",
+      line: "#lineView",
+      video: "#videoView",
+      admin: "#adminTitle"
+    };
+    const focus = document.querySelector(focusMap[viewName] || `#${id}`) || target;
+    requestAnimationFrame(() => {
+      try {
+        focus.scrollIntoView({ behavior: "auto", block: "start" });
+      } catch (_) {
+        window.scrollTo(0, target.offsetTop || 0);
+      }
+    });
+  }
+
+  function applyView(viewName) {
+    const id = viewIdFromName(viewName);
+    const target = document.getElementById(id);
+    if (!target) return false;
+
+    document.querySelectorAll(".view").forEach(view => view.classList.remove("active"));
+    target.classList.add("active");
+
+    document.querySelectorAll(".tab").forEach(tab => {
+      const tabView = tab.dataset ? tab.dataset.view : "";
+      tab.classList.toggle("active", tabView === viewName);
+    });
+
+    const lineBack = document.getElementById("lineBackBar");
+    if (lineBack) lineBack.classList.toggle("show", viewName === "line" || viewName === "video");
+
+    scrollToView(viewName);
+    return true;
+  }
+
+  function replaceInitialState() {
+    const view = currentViewName();
+    lastView = view;
+    const state = Object.assign({}, history.state || {}, {
+      [appStateKey]: true,
+      view
+    });
+    history.replaceState(state, "", location.href);
+  }
+
+  function pushCurrentView() {
+    if (restoring) return;
+    const view = currentViewName();
+    if (!view || view === lastView) return;
+    lastView = view;
+    history.pushState({ [appStateKey]: true, view }, "", location.href);
+  }
+
+  function schedulePush() {
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(pushCurrentView, 60);
+  }
+
+  function observeViewChanges() {
+    const observer = new MutationObserver(schedulePush);
+    viewIds.forEach(id => {
+      const view = document.getElementById(id);
+      if (view) observer.observe(view, { attributes: true, attributeFilter: ["class"] });
+    });
+  }
+
+  function wrapViewFunction(name) {
+    const original = window[name];
+    if (typeof original !== "function" || original.__historyWrapped) return;
+    const wrapped = function(...args) {
+      const result = original.apply(this, args);
+      schedulePush();
+      return result;
+    };
+    wrapped.__historyWrapped = true;
+    window[name] = wrapped;
+  }
+
+  function bindHistory() {
+    replaceInitialState();
+    observeViewChanges();
+    [
+      "switchView",
+      "showFinderCategories",
+      "showFinderAtCategoryTop",
+      "showCartAtSelectedTop",
+      "openCart",
+      "openAiTriage",
+      "openLineWithBack",
+      "openRenovationReason"
+    ].forEach(wrapViewFunction);
+  }
+
+  window.addEventListener("popstate", event => {
+    const state = event.state;
+    if (!state || !state[appStateKey]) return;
+    restoring = true;
+    const ok = applyView(state.view || "finder");
+    lastView = ok ? (state.view || "finder") : currentViewName();
+    setTimeout(() => {
+      restoring = false;
+    }, 200);
+  });
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bindHistory, { once: true });
+  } else {
+    bindHistory();
+  }
+})();
+</script>
 </body>
 </html>
+
 
