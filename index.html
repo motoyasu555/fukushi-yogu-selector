@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ja">
 <head>
 <meta charset="utf-8">
@@ -210,7 +210,7 @@ window.scrollToFilters=window.scrollToFilters||function(){document.querySelector
       button.addEventListener('click',openGuideOnly,true);
     }
     var reno=document.querySelector('#guideRenovationBanner img');
-    if(reno){reno.src='assets/renovation-banner.jpg';reno.alt='AI??????? ???????????????';}
+    if(reno){reno.src='assets/renovation-banner.jpg';reno.alt='AI住宅改修理由書 情報入力で理由書作成をサポート';}
     var logo=document.querySelector('.brand-logo');
     if(logo){logo.src='assets/brand-logo.png';logo.alt='元気サポート浜松';}
   }
@@ -561,12 +561,12 @@ body:has(.admin-login-modal.show) .topbar #openAiConsultTop{position:relative!im
 .brand-logo{display:block!important;width:min(430px,92vw)!important;max-width:100%!important;height:auto!important;max-height:96px!important;object-fit:contain!important;object-position:left center!important;flex:0 1 auto!important;min-height:42px!important}
 .app-description .advisor-face{display:inline-block!important;width:48px!important;height:48px!important;min-width:48px!important;object-fit:cover!important;border-radius:50%!important;vertical-align:middle!important}
 .guide-advisor{display:block!important;width:58px!important;height:58px!important;min-width:58px!important;object-fit:cover!important;border-radius:50%!important}
-img[alt*="AI????"],img[alt*="AI????"]{display:block!important;width:100%!important;max-width:100%!important;height:auto!important;max-height:230px!important;object-fit:contain!important;border-radius:18px!important;background:#fffdf6!important}
+#guideAiBanner img,#guideRenovationBanner img{display:block!important;width:100%!important;max-width:100%!important;height:auto!important;max-height:230px!important;object-fit:contain!important;border-radius:18px!important;background:#fffdf6!important}
 .product-visual.has-photo{background-size:contain!important;background-position:center!important;background-repeat:no-repeat!important;background-color:#fffdf6!important;overflow:hidden!important}
 .product-card .photo-slider{height:100%!important;max-height:170px!important;overflow-x:auto!important;overflow-y:hidden!important;background:#fffdf6!important}
 .product-card .photo-slider img{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;background:#fffdf6!important}
 .product-visual.has-photo:before,.product-visual.has-photo:after{display:none!important}
-@media(max-width:760px){.brand-logo{width:min(360px,94vw)!important;max-height:76px!important}.app-description .advisor-face{width:40px!important;height:40px!important;min-width:40px!important}img[alt*="AI????"],img[alt*="AI????"]{max-height:150px!important}.product-card .photo-slider{max-height:154px!important}}
+@media(max-width:760px){.brand-logo{width:min(360px,94vw)!important;max-height:76px!important}.app-description .advisor-face{width:40px!important;height:40px!important;min-width:40px!important}#guideAiBanner img,#guideRenovationBanner img{max-height:150px!important}.product-card .photo-slider{max-height:154px!important}}
 
 
 
@@ -653,7 +653,7 @@ img[alt*="AI????"],img[alt*="AI????"]{display:block!important;width:100%!importa
 </style>
 </head>
 <body>
-<header class="topbar"><div><p class="eyebrow">Care Equipment Finder</p><div class="brand-lockup"><img class="brand-logo" src="assets/brand-logo.png" alt="????????" style="display:block;width:min(620px,94vw);height:auto;max-width:100%;max-height:none;object-fit:contain;object-position:left center;background:#fff;" onerror="this.alt='??????????????????';"><div><p class="app-name">福祉用具選定アプリ</p><p class="app-catch">もうカタログは持ち運ばない！！</p><p class="app-description"><img class="advisor-face" src="assets/advisor-face.jpg" alt="福祉用具専門相談員">ご希望の福祉用具を探せてLINEやFAXで簡単にデモの相談ができます。URLをコピーしPCでも使えます。お気軽にご利用下さい。</p></div></div></div><div class="top-actions"><nav class="tabs" aria-label="画面切り替え"><button class="tab active" data-view="finder" type="button">福祉用具を探す</button><button id="openCart" class="tab selection-tab" type="button">選定した商品 <span id="cartCount">0</span></button><button id="topLineQuestion" class="tab line-question-tab" type="button" aria-label="LINEで質問する">LINE</button></nav><button id="firstGuideButton" class="first-guide-button" type="button">はじめてご利用する方はこちら</button><button id="openRenovationReason" class="renovation-entry" type="button">AI住宅改修理由書</button><button id="openAiTriageTop" class="renovation-entry ai-triage-top-entry" type="button">AIらくらく選定</button><button id="installGuideButton" class="install-guide-button" type="button">スマホに追加</button><button id="showQrCodeButton" class="qr-code-button" type="button">QRコード</button><a id="headerPhoneButton" class="phone-call-button header-phone" href="tel:0535818121" aria-label="電話をかける 053-581-8121"><span class="phone-icon">☎</span><span>053-581-8121</span></a></div></header><div id="lineBackBar" class="line-back-bar"><button id="lineBackButton" type="button">戻る</button></div>
+<header class="topbar"><div><p class="eyebrow">Care Equipment Finder</p><div class="brand-lockup"><img class="brand-logo" src="assets/brand-logo.png" alt="元気サポート浜松" style="display:block;width:min(620px,94vw);height:auto;max-width:100%;max-height:none;object-fit:contain;object-position:left center;background:#fff;" onerror="this.alt='元気サポート浜松ロゴを表示できません';"><div><p class="app-name">福祉用具選定アプリ</p><p class="app-catch">もうカタログは持ち運ばない！！</p><p class="app-description"><img class="advisor-face" src="assets/advisor-face.jpg" alt="福祉用具専門相談員">ご希望の福祉用具を探せてLINEやFAXで簡単にデモの相談ができます。URLをコピーしPCでも使えます。お気軽にご利用下さい。</p></div></div></div><div class="top-actions"><nav class="tabs" aria-label="画面切り替え"><button class="tab active" data-view="finder" type="button">福祉用具を探す</button><button id="openCart" class="tab selection-tab" type="button">選定した商品 <span id="cartCount">0</span></button><button id="topLineQuestion" class="tab line-question-tab" type="button" aria-label="LINEで質問する">LINE</button></nav><button id="firstGuideButton" class="first-guide-button" type="button">はじめてご利用する方はこちら</button><button id="openRenovationReason" class="renovation-entry" type="button">AI住宅改修理由書</button><button id="openAiTriageTop" class="renovation-entry ai-triage-top-entry" type="button">AIらくらく選定</button><button id="installGuideButton" class="install-guide-button" type="button">スマホに追加</button><button id="showQrCodeButton" class="qr-code-button" type="button">QRコード</button><a id="headerPhoneButton" class="phone-call-button header-phone" href="tel:0535818121" aria-label="電話をかける 053-581-8121"><span class="phone-icon">☎</span><span>053-581-8121</span></a></div></header><div id="lineBackBar" class="line-back-bar"><button id="lineBackButton" type="button">戻る</button></div>
 <main>
 <section id="finderView" class="view active" aria-labelledby="finderTitle"><div class="split"><aside class="panel filters" id="filtersPanel" aria-label="検索条件"><div class="section-title"><h2 id="finderTitle">希望条件</h2><button id="resetFilters" class="icon-btn" type="button" title="条件をリセット" aria-label="条件をリセット">↺</button></div><label class="field"><span>品目</span><select id="categoryFilter"></select></label><div id="conditionalFilters" class="conditional-filters"><label class="field"><span>並び替え</span><select id="sortFilter"><option value="recommend">オススメ順</option><option value="priceDesc">金額の高い順</option><option value="priceAsc">金額の安い順</option></select></label><div class="finder-search-top"><div class="keyword-search-control"><label class="search-box"><span>キーワード検索</span><input id="keywordFilter" type="search" placeholder="商品名・特徴・TAISコードを入力"></label><button id="keywordSearchButton" class="keyword-search-button" type="button">検索</button></div><p class="search-note">※品目を選択してからキーワードを入力してください。<br>※キーワードを入力したままだと他の検索が表示されない場合があります。</p></div><fieldset><legend>選択した品目の特徴</legend><div id="featureFilters" class="feature-buttons"></div></fieldset><input id="needFilter" type="hidden" value=""></div></aside><section class="results" aria-label="商品一覧"><button id="aiTriageBanner" class="ai-triage-banner" type="button" aria-label="AIらくらく選定を開く"><img src="assets/ai-triage-banner.jpg" alt="AIらくらく選定 希望を入力するとAIが情報整理します"></button><div id="categoryCards" class="category-cards" aria-label="品目から探す"></div><div class="results-head"><div><p id="resultCount" class="count"></p><h2>対象おすすめ商品</h2></div></div><div id="productPager" class="page-tabs" aria-label="おすすめ商品ページ"></div><div id="productList" class="product-grid"></div></section></div></section>
 <section id="guideView" class="view" aria-labelledby="guideTitle"><div class="panel guide-page"><div class="guide-head"><button id="guideBack" class="ghost guide-back" type="button">戻る</button><div class="guide-title-wrap"><img id="guideAdvisor" class="advisor-face guide-advisor" alt="福祉用具専門相談員"><div><p class="count">はじめての方向け</p><h2 id="guideTitle">福祉用具選定アプリの使い方</h2></div></div></div><div class="guide-message"><strong>むずかしい操作はありません。</strong><span>品目を選んで、気になる商品を選定に追加するだけで、LINEやFAXでデモ依頼の準備ができます。</span></div><div class="guide-steps"><article><span>1</span><div><h3>福祉用具を探す</h3><p>「福祉用具を探す」をクリックし、特殊寝台・車いす・歩行器などの品目を選びます。</p></div></article><article><span>2</span><div><h3>希望条件で絞り込み</h3><p>キーワードを入力するか、選んだ品目の特徴ボタンをクリックします。特徴は複数選択できます。</p></div></article><article><span>3</span><div><h3>おすすめ商品を見る</h3><p>下部に対象おすすめ商品が表示されます。気になる商品は「詳細を表示」をクリックしてください。</p></div></article><article><span>4</span><div><h3>デモ依頼したい商品を追加</h3><p>商品詳細で「選定に追加する」をクリックします。同じ商品や複数の商品も追加できます。</p></div></article><article><span>5</span><div><h3>選定した商品を確認</h3><p>「選定した商品」をクリックすると、選んだ商品の一覧と月額レンタルの合計単位数を確認できます。</p></div></article><article><span>6</span><div><h3>LINEまたはFAXで依頼</h3><p>「LINE送信用にコピー」で元気サポートLINEへ貼り付けできます。画像作成・PDF作成を使えば、印刷してFAXでデモ依頼もできます。使いやすい方法を選んでください。</p></div></article></div><div class="guide-ai-cta"><div class="guide-ai-alert"><span>！</span><p>初心者でも簡単！自由にご希望を入力するとAIが選定をサポート！</p></div><button id="guideAiTriageBanner" class="guide-ai-banner" type="button" aria-label="AIらくらく選定を開く"><img src="assets/ai-triage-banner.jpg" alt="AIらくらく選定 希望を入力するとAIが情報整理します"></button></div><div class="guide-actions"><button id="guideStart" class="primary" type="button">福祉用具を探してみる</button><button id="guideCart" class="ghost" type="button">選定した商品を見る</button></div></div></section>
@@ -2767,6 +2767,26 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
         try{if(Array.isArray(pendingPhotoPreviews)&&pendingPhotoPreviews.length)photos=pendingPhotoPreviews.slice(0,3)}catch(error){}
       }
 
+      let usageImages=Array.isArray(existing?.usageImages)?existing.usageImages.filter(Boolean).slice(0,2):[];
+      const selectedUsageFiles=[...document.querySelectorAll(".usage-image-input")].map(input=>input.files&&input.files[0]).filter(Boolean).slice(0,2);
+      if(selectedUsageFiles.length){
+        try{
+          notice("使用イメージ写真をアップロードしています...");
+          usageImages=[];
+          for(const file of selectedUsageFiles){
+            if(typeof uploadPhotoToSupabase==="function")usageImages.push(await uploadPhotoToSupabase(file));
+            else if(typeof readPhotoFile==="function")usageImages.push(await readPhotoFile(file));
+          }
+        }catch(error){
+          notice(error.message||text.uploadError);
+          return;
+        }
+      }else if(window.__usageImagesRemoved){
+        usageImages=[];
+      }else{
+        try{if(Array.isArray(window.__pendingUsageImagePreviews)&&window.__pendingUsageImagePreviews.length)usageImages=window.__pendingUsageImagePreviews.slice(0,2)}catch(error){}
+      }
+
       const makerValue=category==="\u7279\u6b8a\u5bdd\u53f0\u4ed8\u5c5e\u54c1"
         ? (document.querySelector("#accessoryMakerInput")?.value||"").trim()
         : (document.querySelector("#makerInput")?.value||"").trim();
@@ -2783,7 +2803,8 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
         price:String(priceValue),
         score:Math.max(1,Math.min(5,Number(document.querySelector("#scoreInput")?.value)||4)),
         photo:photos[0]||"",
-        photos
+        photos,
+        usageImages
       };
       const index=products.findIndex(item=>item.id===id);
       if(index>=0)products[index]=product;
@@ -3155,6 +3176,260 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
   }
 })();
 </script>
+<style id="usage-image-upgrade-style">
+.usage-image-preview{
+  min-height:150px;
+  border:1px dashed var(--line);
+  border-radius:16px;
+  background:rgba(255,255,255,.72);
+  color:var(--muted);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  padding:10px;
+  overflow-x:auto;
+  scroll-snap-type:x mandatory;
+}
+.usage-image-preview img{
+  flex:0 0 min(48%,220px);
+  width:min(48%,220px);
+  height:130px;
+  object-fit:contain;
+  object-position:center;
+  background:#fff;
+  border-radius:14px;
+  border:1px solid var(--line);
+  scroll-snap-align:start;
+}
+.usage-images-section{
+  margin:16px 0;
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(246,255,248,.92));
+}
+.usage-images-section h3{
+  margin:0 0 10px;
+  font-size:1rem;
+  color:var(--brand);
+}
+.usage-image-row{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.usage-image-row img{
+  width:100%;
+  height:clamp(150px,18vw,220px);
+  object-fit:contain;
+  object-position:center;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:16px;
+}
+@media (max-width:640px){
+  .usage-image-row{gap:8px}
+  .usage-image-row img{height:150px}
+  .usage-image-preview img{height:118px}
+}
+</style>
+<script id="usage-image-upgrade">
+(function(){
+  const maxUsageImages=2;
+  window.__pendingUsageImagePreviews=window.__pendingUsageImagePreviews||[];
+
+  function usageImageList(product){
+    return (Array.isArray(product?.usageImages)?product.usageImages:[]).filter(Boolean).slice(0,maxUsageImages);
+  }
+
+  function readUsageImage(file){
+    if(typeof readPhotoFile==="function")return readPhotoFile(file);
+    return new Promise((resolve,reject)=>{
+      if(!file){resolve("");return}
+      if(!file.type||!file.type.startsWith("image/")){reject(new Error("画像ファイルを選択してください"));return}
+      const reader=new FileReader();
+      reader.onload=()=>resolve(String(reader.result||""));
+      reader.onerror=()=>reject(new Error("画像を読み込めませんでした"));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function renderUsagePreview(srcs){
+    const preview=document.querySelector("#usageImagePreview");
+    if(!preview)return;
+    const images=(Array.isArray(srcs)?srcs:[]).filter(Boolean).slice(0,maxUsageImages);
+    preview.replaceChildren();
+    if(!images.length){
+      preview.textContent="使用イメージ写真は未選択です";
+      return;
+    }
+    images.forEach((src,index)=>{
+      const img=document.createElement("img");
+      img.src=src;
+      img.alt=`使用イメージ写真 ${index+1}`;
+      preview.append(img);
+    });
+  }
+
+  function resetUsageImages(markRemoved){
+    document.querySelectorAll(".usage-image-input").forEach(input=>input.value="");
+    window.__pendingUsageImagePreviews=[];
+    window.__usageImagesRemoved=Boolean(markRemoved);
+    renderUsagePreview([]);
+  }
+
+  function installUsageImageFields(){
+    if(document.querySelector("#usageImageInput1"))return;
+    const anchor=document.querySelector("#photoPreview")?.nextElementSibling;
+    if(!anchor)return;
+
+    const field=document.createElement("div");
+    field.className="field usage-image-field";
+    field.innerHTML=[
+      "<span>使用イメージ写真（最大2枚）</span>",
+      '<div class="photo-fields">',
+      '<label><span>使用イメージ1</span><input id="usageImageInput1" class="usage-image-input" type="file" accept="image/*"></label>',
+      '<label><span>使用イメージ2</span><input id="usageImageInput2" class="usage-image-input" type="file" accept="image/*"></label>',
+      "</div>"
+    ].join("");
+    const preview=document.createElement("div");
+    preview.id="usageImagePreview";
+    preview.className="usage-image-preview";
+    preview.textContent="使用イメージ写真は未選択です";
+    const actions=document.createElement("div");
+    actions.className="photo-actions usage-image-actions";
+    actions.innerHTML='<small>商品詳細で、選定に追加するボタンの上に横並びで表示されます。</small><button id="removeUsageImages" class="ghost" type="button">使用イメージを外す</button>';
+    anchor.after(field,preview,actions);
+
+    document.querySelectorAll(".usage-image-input").forEach(input=>{
+      input.addEventListener("change",async()=>{
+        const files=[...document.querySelectorAll(".usage-image-input")].map(item=>item.files&&item.files[0]).filter(Boolean).slice(0,maxUsageImages);
+        try{
+          window.__pendingUsageImagePreviews=[];
+          window.__usageImagesRemoved=false;
+          for(const file of files)window.__pendingUsageImagePreviews.push(await readUsageImage(file));
+          renderUsagePreview(window.__pendingUsageImagePreviews);
+        }catch(error){
+          if(typeof notice==="function")notice(error.message||"使用イメージ写真を読み込めませんでした");
+        }
+      });
+    });
+    document.querySelector("#removeUsageImages")?.addEventListener("click",()=>resetUsageImages(true));
+  }
+
+  function addUsageImagesToDetail(product){
+    const button=document.querySelector("#detailContent .detail-grid .cart-add");
+    if(!button)return;
+    document.querySelector("#detailContent .usage-images-section")?.remove();
+    const images=usageImageList(product);
+    if(!images.length)return;
+    const section=document.createElement("section");
+    section.className="usage-images-section";
+    section.innerHTML='<h3>使用イメージ</h3><div class="usage-image-row"></div>';
+    const row=section.querySelector(".usage-image-row");
+    images.forEach((src,index)=>{
+      const img=document.createElement("img");
+      img.src=src;
+      img.alt=`${product?.name||"商品"} 使用イメージ ${index+1}`;
+      row.append(img);
+    });
+    button.before(section);
+  }
+
+  const originalRenderProductDetail=window.renderProductDetail;
+  if(typeof originalRenderProductDetail==="function"&&!originalRenderProductDetail.__usageImageUpgrade){
+    const wrappedRenderProductDetail=function(product){
+      const result=originalRenderProductDetail.apply(this,arguments);
+      addUsageImagesToDetail(product);
+      return result;
+    };
+    wrappedRenderProductDetail.__usageImageUpgrade=true;
+    window.renderProductDetail=wrappedRenderProductDetail;
+    try{renderProductDetail=wrappedRenderProductDetail}catch(error){}
+  }
+
+  const originalEditProduct=window.editProduct;
+  if(typeof originalEditProduct==="function"&&!originalEditProduct.__usageImageUpgrade){
+    const wrappedEditProduct=function(id){
+      const result=originalEditProduct.apply(this,arguments);
+      let product=null;
+      try{product=products.find(item=>item.id===id)}catch(error){}
+      document.querySelectorAll(".usage-image-input").forEach(input=>input.value="");
+      window.__usageImagesRemoved=false;
+      window.__pendingUsageImagePreviews=usageImageList(product);
+      renderUsagePreview(window.__pendingUsageImagePreviews);
+      return result;
+    };
+    wrappedEditProduct.__usageImageUpgrade=true;
+    window.editProduct=wrappedEditProduct;
+    try{editProduct=wrappedEditProduct}catch(error){}
+  }
+
+  const originalResetFormAfterSave=window.resetFormAfterSave;
+  if(typeof originalResetFormAfterSave==="function"&&!originalResetFormAfterSave.__usageImageUpgrade){
+    const wrappedReset=function(){
+      const result=originalResetFormAfterSave.apply(this,arguments);
+      resetUsageImages(false);
+      return result;
+    };
+    wrappedReset.__usageImageUpgrade=true;
+    window.resetFormAfterSave=wrappedReset;
+    try{resetFormAfterSave=wrappedReset}catch(error){}
+  }
+
+  const originalClearForm=window.clearForm;
+  if(typeof originalClearForm==="function"&&!originalClearForm.__usageImageUpgrade){
+    const wrappedClear=function(){
+      const result=originalClearForm.apply(this,arguments);
+      resetUsageImages(false);
+      return result;
+    };
+    wrappedClear.__usageImageUpgrade=true;
+    window.clearForm=wrappedClear;
+    try{clearForm=wrappedClear}catch(error){}
+  }
+
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded",installUsageImageFields,{once:true});
+  }else{
+    installUsageImageFields();
+  }
+})();
+</script>
+<style id="recommendation-photo-height-fix">
+#productList .product-card{
+  grid-template-rows:clamp(220px,18vw,280px) 1fr !important;
+  min-height:520px !important;
+}
+#productList .product-card .product-visual,
+#productList .product-card .photo-slider{
+  height:clamp(220px,18vw,280px) !important;
+  min-height:220px !important;
+}
+#productList .product-card .product-visual.has-photo{
+  background-size:contain !important;
+  background-position:center !important;
+  background-repeat:no-repeat !important;
+}
+#productList .product-card .photo-slider img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain !important;
+  object-position:center !important;
+}
+@media (max-width:760px){
+  #productList .product-card{
+    grid-template-rows:210px 1fr !important;
+    min-height:500px !important;
+  }
+  #productList .product-card .product-visual,
+  #productList .product-card .photo-slider{
+    height:210px !important;
+    min-height:210px !important;
+  }
+}
+</style>
 </body>
 </html>
 
