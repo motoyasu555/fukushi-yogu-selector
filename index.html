@@ -3483,6 +3483,177 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
   renderCategoryScopedFeatureCandidateList();
 })();
 </script>
+<script id="total-product-count-badge">
+(function(){
+  function ensureTotalProductCount(){
+    const head=document.querySelector(".results-head");
+    if(!head)return null;
+    let badge=document.querySelector("#totalProductCount");
+    if(!badge){
+      badge=document.createElement("p");
+      badge.id="totalProductCount";
+      badge.className="count total-product-count";
+      head.append(badge);
+    }
+    return badge;
+  }
+
+  function updateTotalProductCount(){
+    const badge=ensureTotalProductCount();
+    if(!badge)return;
+    let total=0;
+    try{total=Array.isArray(products)?products.length:0}catch(error){}
+    badge.textContent="登録商品数：全"+total+"件";
+  }
+
+  const originalRenderProducts=window.renderProducts;
+  if(typeof originalRenderProducts==="function"&&!originalRenderProducts.__totalProductCountBadge){
+    const wrapped=function(){
+      const result=originalRenderProducts.apply(this,arguments);
+      updateTotalProductCount();
+      return result;
+    };
+    wrapped.__totalProductCountBadge=true;
+    window.renderProducts=wrapped;
+    try{renderProducts=wrapped}catch(error){}
+  }
+
+  const originalRenderCategoryCards=window.renderCategoryCards;
+  if(typeof originalRenderCategoryCards==="function"&&!originalRenderCategoryCards.__totalProductCountBadge){
+    const wrapped=function(){
+      const result=originalRenderCategoryCards.apply(this,arguments);
+      updateTotalProductCount();
+      return result;
+    };
+    wrapped.__totalProductCountBadge=true;
+    window.renderCategoryCards=wrapped;
+    try{renderCategoryCards=wrapped}catch(error){}
+  }
+
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded",updateTotalProductCount,{once:true});
+  }else{
+    updateTotalProductCount();
+  }
+})();
+</script>
+<style id="total-product-count-style">
+.results-head .total-product-count{
+  margin:0;
+  padding:7px 12px;
+  border:1px solid #dcefd8;
+  border-radius:999px;
+  background:rgba(255,255,255,.86);
+  color:#4f7f57;
+  font-size:.86rem;
+  font-weight:900;
+  white-space:nowrap;
+}
+@media(max-width:760px){
+  .results-head{
+    align-items:flex-start;
+    flex-wrap:wrap;
+  }
+  .results-head .total-product-count{
+    font-size:.78rem;
+    padding:6px 10px;
+  }
+}
+</style>
+<script id="bottom-product-pager-upgrade">
+(function(){
+  function ensureBottomPager(){
+    const list=document.querySelector("#productList");
+    if(!list)return null;
+    let pager=document.querySelector("#productPagerBottom");
+    if(!pager){
+      pager=document.createElement("div");
+      pager.id="productPagerBottom";
+      pager.className="page-tabs page-tabs-bottom";
+      pager.setAttribute("aria-label","おすすめ商品ページ 下部");
+      list.insertAdjacentElement("afterend",pager);
+    }
+    return pager;
+  }
+
+  function renderBottomPager(){
+    const pager=ensureBottomPager();
+    if(!pager)return;
+    pager.replaceChildren();
+    let matches=[];
+    try{matches=filteredProducts()}catch(error){matches=[]}
+    const hasSearch=Boolean(document.querySelector("#categoryFilter")?.value)||Boolean((document.querySelector("#keywordFilter")?.value||"").trim());
+    const pages=Math.max(1,Math.ceil(matches.length/pageSize));
+    if(!hasSearch||matches.length===0||pages<=1){
+      pager.hidden=true;
+      return;
+    }
+    pager.hidden=false;
+    for(let i=1;i<=pages;i++){
+      const button=document.createElement("button");
+      button.type="button";
+      button.className="page-tab";
+      button.textContent=String(i);
+      button.classList.toggle("active",i===productPage);
+      button.addEventListener("click",()=>{
+        productPage=i;
+        renderProducts();
+        requestAnimationFrame(()=>scrollToResults?.());
+      });
+      pager.append(button);
+    }
+  }
+
+  const originalRenderProducts=window.renderProducts;
+  if(typeof originalRenderProducts==="function"&&!originalRenderProducts.__bottomPagerUpgrade){
+    const wrapped=function(){
+      const result=originalRenderProducts.apply(this,arguments);
+      renderBottomPager();
+      return result;
+    };
+    wrapped.__bottomPagerUpgrade=true;
+    window.renderProducts=wrapped;
+    try{renderProducts=wrapped}catch(error){}
+  }
+
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded",renderBottomPager,{once:true});
+  }else{
+    renderBottomPager();
+  }
+})();
+</script>
+<style id="bottom-product-pager-style">
+.page-tabs-bottom{
+  justify-content:center;
+  margin:22px 0 4px;
+  padding:14px;
+  border:1px solid #dcefd8;
+  border-radius:22px;
+  background:rgba(255,255,255,.82);
+  box-shadow:0 10px 24px rgba(76,126,80,.10);
+}
+.page-tabs-bottom[hidden]{display:none!important}
+.page-tabs-bottom .page-tab{
+  min-width:54px;
+  min-height:46px;
+  font-size:1rem;
+}
+@media(max-width:760px){
+  .page-tabs-bottom{
+    position:sticky;
+    bottom:84px;
+    z-index:8;
+    margin:18px 0 8px;
+    padding:10px;
+    backdrop-filter:blur(10px);
+  }
+  .page-tabs-bottom .page-tab{
+    min-width:50px;
+    min-height:44px;
+  }
+}
+</style>
 <style id="recommendation-photo-height-fix">
 #productList .product-card{
   grid-template-rows:clamp(220px,18vw,280px) 1fr !important;
