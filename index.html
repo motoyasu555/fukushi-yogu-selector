@@ -3399,6 +3399,90 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
   }
 })();
 </script>
+<script id="admin-category-feature-suggestions-fix">
+(function(){
+  const categoryFeatureDefaults={
+    "特殊寝台":["電動昇降","背上げ","膝上げ","低床","高さ調整","垂直昇降","2モーター","3モーター","木製ボード","樹脂ボード","省スペース"],
+    "特殊寝台付属品":["サイドレール","介助バー","テーブル","マットレス","延長フレーム","メーカー対応","省スペース","転落予防"],
+    "床ずれ防止用具":["体圧分散","通気","洗える","防水","静音","自動調整","軽量"],
+    "車いす":["自走式","介助式","軽量","折りたたみ","ノーパンク","肘跳ね上げ","スイングアウト","屋外対応","コンパクト"],
+    "車いす付属品":["クッション","体圧分散","姿勢保持","テーブル","ブレーキ延長","転倒防止","雨よけ"],
+    "電動カート":["屋外対応","長距離","小回り","コンパクト","買い物カゴ","安定性","坂道対応"],
+    "電動車いす":["屋外対応","小回り","電動昇降","リクライニング","コンパクト","介助操作","長距離"],
+    "手すり":["据え置き型","突っ張り型","玄関","トイレ","ベッド横","廊下","屋外対応","高さ調整","滑り止め"],
+    "歩行器":["コンパクト","軽量","折りたたみ","前腕支持型","買い物カゴが載せる","屋内用","屋外対応","座面付き","高さ調整"],
+    "歩行補助つえ":["軽量","高さ調整","折りたたみ","四点杖","多点杖","滑り止め","屋外対応"],
+    "スロープ":["屋外対応","折りたたみ","軽量","滑り止め","段差解消","車いす対応","持ち運び"],
+    "体位変換器":["体圧分散","姿勢保持","通気","洗える","軽量","防水"],
+    "認知症老人徘徊感知機器":["見守り","センサー","通知","ベッド横","玄関","ワイヤレス","簡単設置"],
+    "移動用リフト":["床走行式","吊り具","入浴対応","移乗","介助負担軽減","省スペース"]
+  };
+
+  function selectedAdminCategory(){
+    return document.querySelector("#categoryInput")?.value||"";
+  }
+
+  function collectCategoryFeatures(category){
+    const set=new Set();
+    (categoryFeatureDefaults[category]||[]).forEach(feature=>set.add(feature));
+    try{
+      products
+        .filter(product=>product&&product.category===category)
+        .forEach(product=>(product.features||[]).forEach(feature=>{
+          const value=String(feature||"").trim();
+          if(value)set.add(value);
+        }));
+    }catch(error){}
+    return [...set].sort((a,b)=>a.localeCompare(b,"ja"));
+  }
+
+  function addAdminFeatureCandidate(feature){
+    if(!feature)return;
+    try{
+      if(!currentFeatureTags.includes(feature))currentFeatureTags.push(feature);
+      renderFeatureTagList?.();
+      renderFeatureCandidateList?.();
+    }catch(error){}
+  }
+
+  function renderCategoryScopedFeatureCandidateList(){
+    const list=document.querySelector("#featureCandidateList");
+    if(!list)return;
+    list.replaceChildren();
+    const category=selectedAdminCategory();
+    if(!category){
+      const empty=document.createElement("small");
+      empty.className="empty";
+      empty.textContent="品目を選択すると、その品目で使いやすい特徴候補が表示されます。";
+      list.append(empty);
+      return;
+    }
+    const selected=new Set(Array.isArray(currentFeatureTags)?currentFeatureTags:[]);
+    const candidates=collectCategoryFeatures(category).filter(feature=>!selected.has(feature));
+    if(!candidates.length){
+      const empty=document.createElement("small");
+      empty.className="empty";
+      empty.textContent="この品目の特徴候補はまだありません。上の入力欄から追加できます。";
+      list.append(empty);
+      return;
+    }
+    candidates.slice(0,40).forEach(feature=>{
+      const button=document.createElement("button");
+      button.type="button";
+      button.className="feature-button";
+      button.textContent=feature;
+      button.addEventListener("click",()=>addAdminFeatureCandidate(feature));
+      list.append(button);
+    });
+  }
+
+  window.renderFeatureCandidateList=renderCategoryScopedFeatureCandidateList;
+  try{renderFeatureCandidateList=renderCategoryScopedFeatureCandidateList}catch(error){}
+  const categoryInput=document.querySelector("#categoryInput");
+  categoryInput?.addEventListener("change",renderCategoryScopedFeatureCandidateList);
+  renderCategoryScopedFeatureCandidateList();
+})();
+</script>
 <style id="recommendation-photo-height-fix">
 #productList .product-card{
   grid-template-rows:clamp(220px,18vw,280px) 1fr !important;
