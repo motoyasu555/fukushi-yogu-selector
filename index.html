@@ -3560,6 +3560,78 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
   }
 }
 </style>
+<script id="category-area-total-count-badge">
+(function(){
+  function ensureCategoryTotalCount(){
+    const cards=document.querySelector("#categoryCards");
+    if(!cards)return null;
+    let badge=document.querySelector("#categoryAreaTotalCount");
+    if(!badge){
+      badge=document.createElement("p");
+      badge.id="categoryAreaTotalCount";
+      badge.className="category-area-total-count";
+      cards.insertAdjacentElement("beforebegin",badge);
+    }
+    return badge;
+  }
+
+  function updateCategoryAreaTotalCount(){
+    const badge=ensureCategoryTotalCount();
+    if(!badge)return;
+    let total=0;
+    try{total=Array.isArray(products)?products.length:0}catch(error){}
+    badge.textContent="登録商品数：全"+total+"件";
+  }
+
+  const originalRenderProducts=window.renderProducts;
+  if(typeof originalRenderProducts==="function"&&!originalRenderProducts.__categoryAreaTotalCount){
+    const wrapped=function(){
+      const result=originalRenderProducts.apply(this,arguments);
+      updateCategoryAreaTotalCount();
+      return result;
+    };
+    wrapped.__categoryAreaTotalCount=true;
+    window.renderProducts=wrapped;
+    try{renderProducts=wrapped}catch(error){}
+  }
+
+  const originalRenderCategoryCards=window.renderCategoryCards;
+  if(typeof originalRenderCategoryCards==="function"&&!originalRenderCategoryCards.__categoryAreaTotalCount){
+    const wrapped=function(){
+      const result=originalRenderCategoryCards.apply(this,arguments);
+      updateCategoryAreaTotalCount();
+      return result;
+    };
+    wrapped.__categoryAreaTotalCount=true;
+    window.renderCategoryCards=wrapped;
+    try{renderCategoryCards=wrapped}catch(error){}
+  }
+
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded",updateCategoryAreaTotalCount,{once:true});
+  }else{
+    updateCategoryAreaTotalCount();
+  }
+})();
+</script>
+<style id="category-area-total-count-style">
+.category-area-total-count{
+  width:min(1180px,100%);
+  margin:0 auto 14px;
+  padding:0 6px;
+  color:#4f7f57;
+  font-size:.9rem;
+  font-weight:900;
+  text-align:right;
+}
+@media(max-width:760px){
+  .category-area-total-count{
+    margin-bottom:10px;
+    font-size:.8rem;
+    text-align:left;
+  }
+}
+</style>
 <script id="bottom-product-pager-upgrade">
 (function(){
   function ensureBottomPager(){
