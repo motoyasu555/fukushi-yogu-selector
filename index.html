@@ -3372,7 +3372,7 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
   if(typeof originalResetFormAfterSave==="function"&&!originalResetFormAfterSave.__usageImageUpgrade){
     const wrappedReset=function(){
       const result=originalResetFormAfterSave.apply(this,arguments);
-      resetUsageImages(false);
+      resetUsageImages(true);
       return result;
     };
     wrappedReset.__usageImageUpgrade=true;
@@ -3384,7 +3384,7 @@ function bindFinalNavigationPolish(){document.querySelector('.tab[data-view="fin
   if(typeof originalClearForm==="function"&&!originalClearForm.__usageImageUpgrade){
     const wrappedClear=function(){
       const result=originalClearForm.apply(this,arguments);
-      resetUsageImages(false);
+      resetUsageImages(true);
       return result;
     };
     wrappedClear.__usageImageUpgrade=true;
